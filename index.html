@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+
+<style>
+@import url(//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css);
+
+#map {
+  width: 960px;
+  height: 500px;
+  background: none;
+}
+svg {
+  position: relative;
+}
+
+path {
+  fill: #000;
+  fill-opacity: .2;
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+path:hover {
+  fill: brown;
+  fill-opacity: .7;
+}
+
+.us:hover {
+  fill: green;
+  fill-opacity: .7;
+}
+
+</style>
+
+
+
+<body>
+<p id="map">
+
+<script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/proj4js-compressed.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.js"></script>
+<script src="lib/proj4-compressed.js"></script>
+<script src="src/proj4leaflet.js"></script>
+    <script src="src/L.TileLayer.BetterWMS.js"></script>
+
+<script>
+
+var crs = new L.Proj.CRS('EPSG:3005',
+  '+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs',
+  {
+    resolutions: [
+      8192, 4096, 2048, 1024, 512, 256, 128,
+      64, 32, 16, 8, 4, 2, 1, 0.5
+    ],
+    origin: [0, 0]
+  }),
+  map = new L.Map('map', {
+    crs: crs,
+    continuousWorld: true,
+    worldCopyJump: false
+  });
+
+
+
+L.tileLayer.betterWms("http://tools.pacificclimate.org/ncWMS-PCIC/wms", {
+        layers: 'pr_monClim_PRISM_historical_run1_197101-200012/pr',
+ format: 'image/png',
+ maxZoom: 14,
+ minZoom: 0,
+ continuousWorld: true
+      }).addTo(map);
+
+map.setView([54, -122.9364], 1);
+
+
+
+var svg = d3.select(map.getPanes().overlayPane).append("svg"),
+    g = svg.append("g").attr("class", "leaflet-zoom-hide");
+
+var test;
+
+d3.json("canada.json", function(error, merged) {
+  if (error) return console.error(error);
+  d3.json("us.json", function(collection) {
+  test = merged
+  // first variable is used to center and scale map the viewport
+  var bTopo = topojson.feature(merged, merged.objects.canada),
+    topo = bTopo.features;
+    feature = topo;
+
+  svg.selectAll("path")
+    .data(topo)
+    .enter()
+    .append("path");
+
+
+  var transform = d3.geo.transform({point: projectPoint}),
+    path = d3.geo.path().projection(transform);
+
+  var feature = g.selectAll("path")
+    .data(bTopo.features)
+    .enter()
+    .append("path");
+
+
+
+  map.on("viewreset", reset);
+
+
+ 
+  var feature1 = g.selectAll("path1")
+      .data(collection.features)
+    .enter().append("path")
+    .attr("class","us");
+
+
+  reset();
+
+  function reset() {
+
+    var bounds = path.bounds(collection),
+      topLeft = bounds[0],
+      bottomRight = bounds[1];
+
+    svg.attr("width", bottomRight[0] - topLeft[0])
+      .attr("height", bottomRight[1] - topLeft[1])
+      .style("left", topLeft[0] + "px")
+      .style("top", topLeft[1] + "px");
+
+    g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+
+    feature.attr("d", path)
+    feature1.attr("d", path);
+
+  }
+
+  function projectPoint(x, y) {
+    var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+    this.stream.point(point.x, point.y);
+  };
+
+});
+
+});
+
+
+
+
+//   map.on("viewreset", reset1);
+//   reset1();
+
+//   // Reposition the SVG to cover the features.
+//   function reset1() {
+//     var bounds = path.bounds(collection),
+//         topLeft = bounds[0],
+//         bottomRight = bounds[1];
+
+//     svg .attr("width", bottomRight[0] - topLeft[0])
+//         .attr("height", bottomRight[1] - topLeft[1])
+//         .style("left", topLeft[0] + "px")
+//         .style("top", topLeft[1] + "px");
+
+//     g   .attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+
+//     feature1.attr("d", path);
+//   }
+
+//   // Use Leaflet to implement a D3 geometric transformation.
+//   function projectPoint(x, y) {
+//     var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+//     this.stream.point(point.x, point.y);
+//   }
+// });
+
+
+
+</script>
+
+
+
+
+
+</body>
+</html>
