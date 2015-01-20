@@ -1,5 +1,6 @@
+ var popup; 
 L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
-  
+
   onAdd: function (map) {
     // Triggered when the layer is added to a map.
     //   Register a click listener, then do all the upstream WMS things
@@ -18,10 +19,11 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
     // Make an AJAX request to the server and hope for the best
     var url = this.getFeatureInfoUrl(evt.latlng),
         showResults = L.Util.bind(this.showGetFeatureInfo, this);
+        console.log(this.showGetFeatureInfo)
     $.ajax({
       url: url,
       success: function (data, status, xhr) {
-
+        popup = data
         var err = typeof data === 'string' ? null : data;
         showResults(err, evt.latlng, data);
       },
@@ -44,13 +46,12 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
           transparent: this.wmsParams.transparent,
           version: this.wmsParams.version,      
           format: this.wmsParams.format,
-          INFO_FORMAT: 'text/xml',
           bbox: this._map.getBounds().toBBoxString(),
           height: size.y,
           width: size.x,
           layers: this.wmsParams.layers,
           query_layers: this.wmsParams.layers,
-          info_format: 'text/html'
+          info_format: 'text/xml'
         };
     
     params[params.version === '1.3.0' ? 'i' : 'x'] = point.x;
@@ -60,13 +61,13 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
   },
   
   showGetFeatureInfo: function (err, latlng, content) {
-    if (err) { console.log(err); return; } // do nothing if there's an error
+    console.log(content.documentElement.innerHTML)
 
     // Otherwise show the content in a popup, or something.
     L.popup({ maxWidth: 800})
       .setLatLng(latlng)
-      .setContent(content)
-      .openOn(this._map);
+      .setContent(content.getElementsByTagName('value')[0].innerHTML)
+      .openOn(map);
   }
 });
  
