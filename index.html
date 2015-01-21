@@ -21,10 +21,10 @@
       stroke-width: 1px;
   }
 
-.canada {
-    fill: #000;
+/*.ocean {
+    fill: blue;
     fill-opacity: .3;
-}  
+}  */
 
 .us{
     fill: #bdbdbd;
@@ -80,6 +80,12 @@ layers: 'pr_monClim_PRISM_historical_run1_197101-200012/pr',
 format: 'image/png',
 maxZoom: 14,
 minZoom: 0,
+transparent: 'true',
+time: '1985-06-30',
+styles: 'boxfill/occam_inv',
+logscale: true,
+numcolorbands: 254,
+version: '1.1.1',
 continuousWorld: true
 }).addTo(map);
 
@@ -95,8 +101,11 @@ g = svg.append("g").attr("class", "leaflet-zoom-hide");
     d3.json("canada.json", function(error, merged) {
         if (error) return console.error(error);
 
-    d3.json("us.json", function(collection) {
-    
+    d3.json("ocean.json", function(error, ocean) {
+            if (error) return console.error(error);
+var pacific = topojson.feature(ocean, ocean.objects.ocean);
+    d3.json("us.json", function(error, collection) {
+        if (error) return console.error(error);
 
     // first variable is used to center and scale map the viewport
     var bTopo = topojson.feature(merged, merged.objects.canada),
@@ -129,6 +138,10 @@ g = svg.append("g").attr("class", "leaflet-zoom-hide");
         .enter().append("path")
         .attr("class","us");
 
+    var ocean = g.selectAll("path2")
+        .data(pacific.features)
+        .enter().append("path")
+        .attr("class","ocean");
 
     reset();
 
@@ -146,7 +159,18 @@ g = svg.append("g").attr("class", "leaflet-zoom-hide");
         g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
 
         feature.attr("d", path)
-        feature1.attr("d", path);
+        .style("fill", function(d){
+            console.log(d)
+            if (d.properties.province == "British Columbia") {
+                return "none"
+            } else { 
+                return "#ddd";
+            }
+        })
+        feature1.attr("d", path)
+            .style("fill", "#ddd");
+        ocean.attr("d", path)
+            .style("fill", "blue");
 
     }
 
@@ -154,7 +178,7 @@ g = svg.append("g").attr("class", "leaflet-zoom-hide");
         var point = map.latLngToLayerPoint(new L.LatLng(y, x));
         this.stream.point(point.x, point.y);
     };
-
+    });
     });
 
 });
