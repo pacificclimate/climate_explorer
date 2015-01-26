@@ -9,13 +9,13 @@
     #map {
       width: 960px;
       height: 500px;
-      background: none;
+      background: #a6cef5;
   }
   svg {
       position: relative;
   }
 
-  path {
+  .canada {
 
       stroke: #fff;
       stroke-width: 1px;
@@ -28,6 +28,8 @@
 
 .us{
     fill: #bdbdbd;
+    stroke: #fff;
+    stroke-width: 1px;
 }
 /*  path:hover {
       fill: brown;
@@ -61,32 +63,35 @@
 var crs = new L.Proj.CRS('EPSG:3005',
 '+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs',
 {
-resolutions: [
-8192, 4096, 2048, 1024, 512, 256, 128,
-64, 32, 16, 8, 4, 2, 1, 0.5
-],
-origin: [0, 0]
+    resolutions: [
+    8192, 4096, 2048, 1024, 512, 256, 128,
+    64, 32, 16, 8, 4, 2, 1, 0.5
+    ],
+    origin: [0, 0]
 }),
 map = new L.Map('map', {
-crs: crs,
-continuousWorld: true,
-worldCopyJump: false
+    crs: crs,
+    continuousWorld: true,
+    worldCopyJump: false
 });
 
-
+// precip layer
+// 'pr_monClim_PRISM_historical_run1_197101-200012/pr',
+// styles: 'boxfill/occam_inv',
+// logscale: false,
 
 L.tileLayer.betterWms("http://tools.pacificclimate.org/ncWMS-PCIC/wms", {
-layers: 'pr_monClim_PRISM_historical_run1_197101-200012/pr',
-format: 'image/png',
-maxZoom: 14,
-minZoom: 0,
-transparent: 'true',
-time: '1985-06-30',
-styles: 'boxfill/occam_inv',
-logscale: true,
-numcolorbands: 254,
-version: '1.1.1',
-continuousWorld: true
+    layers: 'tmax_monClim_PRISM_historical_run1_197101-200012/tmax',
+    format: 'image/png',
+    maxZoom: 14,
+    minZoom: 0,
+    transparent: 'true',
+    time: '1985-06-30',
+    styles: 'boxfill/rainbow',
+    logscale: false,
+    numcolorbands: 254,
+    version: '1.1.1',
+    continuousWorld: true
 }).addTo(map);
 
 map.setView([54, -122.9364], 1);
@@ -170,7 +175,7 @@ var pacific = topojson.feature(ocean, ocean.objects.ocean);
         feature1.attr("d", path)
             .style("fill", "#ddd");
         ocean.attr("d", path)
-            .style("fill", "blue");
+            .style("fill", "#a6cef5");
 
     }
 
