@@ -41,13 +41,51 @@
       fill-opacity: .7;
   }*/
 
+  .axis .domain {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .3;
+  stroke-width: 10px;
+  stroke-linecap: round;
+
+}
+
+.axis .halo {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 8px;
+  stroke-linecap: round;
+}
+
+.g-slider {
+    fill: white;
+}
+
+.g-slider .background {
+  cursor: ew-resize !important;
+}
+.g-slider .handle {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 1.0px;
+  pointer-events: none;
+
+}
+
+#slider {
+    position: absolute;
+    left: 40px;
+    top: 360px;
+    font-size: 0.8em;
+}
+
   </style>
 
 
 
   <body>
 <p id="map">
-
+<div id="slider">
 <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/proj4js-compressed.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
@@ -80,22 +118,99 @@ map = new L.Map('map', {
 // styles: 'boxfill/occam_inv',
 // logscale: false,
 
-L.tileLayer.betterWms("http://tools.pacificclimate.org/ncWMS-PCIC/wms", {
-    layers: 'tmax_monClim_PRISM_historical_run1_197101-200012/tmax',
-    format: 'image/png',
-    maxZoom: 14,
-    minZoom: 0,
-    transparent: 'true',
-    time: '1985-06-30',
-    styles: 'boxfill/rainbow',
-    logscale: false,
-    numcolorbands: 254,
-    version: '1.1.1',
-    continuousWorld: true
-}).addTo(map);
 
 map.setView([54, -122.9364], 1);
 
+
+var sliderWidth = 260,
+    sliderHeight = 30;
+
+var margin = {top: 10, right: 10, bottom: 10, left: 10}
+
+var current = {"month":1},
+    maxValue = 12,
+    moving;
+
+var sliderContainer = d3.select("#slider").append("svg")
+    .attr("width", sliderWidth + margin.left + margin.right + 10)
+    .attr("height", sliderHeight + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var x = d3.scale.linear()
+    .domain([1,12])
+    .range([0, sliderWidth])
+    .clamp(true);
+
+var brushToMonth = d3.scale.threshold()
+    .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    .range([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+
+var brush = d3.svg.brush()
+    .x(x)
+    .extent([current.month, current.month])
+    .on("brush", brushed);
+
+var xTicks = {
+  "1": "Jan",
+  "2": "",
+  "3": "Mar",
+  "4": "",
+  "5": "May",
+  "6": "",
+  "7": "Jul",
+  "8": "",
+  "9": "Sep",
+  "10": "",
+  "11": "Nov",
+  "12": ""
+};
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("button")
+    .ticks(12)
+    .tickFormat(function(d) {
+        return xTicks[d];
+    })
+    .tickSize(10, 0)
+    .tickPadding(0);
+
+sliderContainer.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + sliderHeight / 2 + ")")
+    .call(d3.svg.axis()
+            .scale(x)
+            .orient("button")
+            .ticks(12)
+            .tickFormat(function(d) {
+                return xTicks[d];
+            })
+            .tickSize(0)
+            .tickPadding(12))
+            .select(".domain")
+            .select(function() {
+                return this.parentNode.appendChild(this.cloneNode(true));
+            })    
+            .attr("class", "halo");
+
+sliderContainer.call(xAxis)
+
+var slider = sliderContainer.append("g")
+    .attr("class", "g-slider")
+    .call(brush);
+
+slider.selectAll(".extent, .resize").remove();
+
+slider.select(".background")
+    .attr("height", sliderHeight);
+
+var handle = slider.append("circle")
+    .attr("class", "handle")
+    .attr("transform", "translate(0," + sliderHeight / 2 + ")")
+    .attr("r", 9);
+
+drawMap(1)
 
 
 var svg = d3.select(map.getPanes().overlayPane).append("svg"),
@@ -108,7 +223,8 @@ g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
     d3.json("ocean.json", function(error, ocean) {
             if (error) return console.error(error);
-var pacific = topojson.feature(ocean, ocean.objects.ocean);
+        var pacific = topojson.feature(ocean, ocean.objects.ocean);
+
     d3.json("us.json", function(error, collection) {
         if (error) return console.error(error);
 
@@ -165,7 +281,7 @@ var pacific = topojson.feature(ocean, ocean.objects.ocean);
 
         feature.attr("d", path)
         .style("fill", function(d){
-            console.log(d)
+            // console.log(d)
             if (d.properties.province == "British Columbia") {
                 return "none"
             } else { 
@@ -188,6 +304,69 @@ var pacific = topojson.feature(ocean, ocean.objects.ocean);
 
 });
 
+var wmsl;
+
+function drawMap(date){
+
+    wmsL = L.tileLayer.betterWms("http://tools.pacificclimate.org/ncWMS-PCIC/wms", {
+    layers: 'tmax_monClim_PRISM_historical_run1_197101-200012/tmax',
+    format: 'image/png',
+    maxZoom: 14,
+    minZoom: 0,
+    transparent: 'true',
+    time: '1985-'+date+'-15',
+    styles: 'boxfill/rainbow',
+    logscale: false,
+    numcolorbands: 254,
+    version: '1.1.1',
+    continuousWorld: true
+});
+    console.log(this.map._layers)
+
+   wmsL.addTo(map)
+  
+}
+
+function brushed() {
+    map.removeLayer(wmsL)
+    var value = brush.extent()[0];
+
+    if (d3.event.sourceEvent) {
+            // targetValue = d3.round(x.invert(d3.mouse(this)[0]));
+        
+        value = Math.round(x.invert(d3.mouse(this)[0]));
+
+        brush.extent([value, value]);
+    }
+    handle.attr("cx", x(value));
+    var brushDate = brushToMonth(value -1);
+
+        current.month = brushDate;
+
+        drawMap(brushDate)
+    
+}2
+
+
+
+// function move() {
+//     var copyValue = current.month;
+//     if (moving) return false;
+//     moving = true;
+
+//     d3.timer(function() { // not sure how this works yet
+//         if (copyValue !== current.month) return !(moving = false);
+
+//         copyValue = current.month = Math.abs(current.month - targetValue) < 1e-3
+//         ? targetValue
+//         : targetValue * .25 + current.month * (1-.25);
+        
+    
+
+
+// });
+
+// }
 
 
 

@@ -42,6 +42,7 @@ getFeatureInfoUrl: function (latlng) {
       request: 'GetFeatureInfo',
       service: 'WMS',
       srs: 'EPSG:4326',
+      time: this.wmsParams.time,
       styles: this.wmsParams.styles,
       transparent: this.wmsParams.transparent,
       version: this.wmsParams.version,      
@@ -61,7 +62,7 @@ getFeatureInfoUrl: function (latlng) {
 },
 
 showGetFeatureInfo: function (err, latlng, content) {
-    console.log(content.documentElement.innerHTML)
+    // console.log(content.documentElement.innerHTML)
 
     // Otherwise show the content in a popup, or something.
     
