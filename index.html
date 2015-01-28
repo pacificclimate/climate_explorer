@@ -85,24 +85,7 @@ top: 360px;
 font-size: 0.8em;
 }
 
-/*#chart_container {
-        position: relative;
-        font-family: Arial, Helvetica, sans-serif;
-}
-#chart {
-        position: relative;
-        left: 40px;
-}
-.rickshaw_graph .y_ticks {
-        left: 0;
-}
-#y_axis {
-        position: absolute;
-        color: none;
-        top: 0;
-        bottom: 0;
-        width: 40px;
-}*/
+
 .line {
   fill: none;
   stroke: steelblue;
@@ -162,7 +145,7 @@ var crs = new L.Proj.CRS('EPSG:3005',
     origin: [0, 0]
 }),
 southWest = L.latLng(46.851760 , -142.734375),
-northEast = L.latLng(60.364901 , -120.917969),
+northEast = L.latLng(60.364901 , -110.917969),
 bounds = L.latLngBounds(southWest, northEast);
 
 map = new L.Map('map', {

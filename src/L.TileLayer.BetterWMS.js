@@ -75,7 +75,7 @@ d3.select("#theChart")
 // make graph here (move later)
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 650 - margin.left - margin.right,
+    width = 450 - margin.left - margin.right,
     height = 250 - margin.top - margin.bottom;
 
 var parseDate = d3.time.format("%Y-%m-%d").parse;
@@ -141,16 +141,18 @@ svg.selectAll("circle")
     .append("circle")
     .attr("r", 3.5)
     .attr("cx", function(d) { return x(d.x); })
-    .attr("cy", function(d) { return y(d.y); });
+    .attr("cy", function(d) { return y(d.y); })
+    .style("fill", "rgb(214,39,40)");
 
-
+// round to 2 decimal places. Causes NaN on none...
+// var temp = content.getElementsByTagName('value')[this.wmsParams.month].innerHTML;
 console.log(this.wmsParams.month)
     // Otherwise show the content in a popup, or something.
   // chartData =content.getElementsByTagName('value');
 
   L.popup({ maxWidth: 800})
   .setLatLng(latlng)
-  .setContent(content.getElementsByTagName('value')[this.wmsParams.month].innerHTML)
+  .setContent(content.getElementsByTagName('value')[this.wmsParams.month-1].innerHTML)
   .openOn(map);
 }
 });
