@@ -76,7 +76,7 @@ d3.select("#theChart")
 // make graph here (move later)
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 450 - margin.left - margin.right,
+    width = 650 - margin.left - margin.right,
     height = 250 - margin.top - margin.bottom;
 
 var parseDate = d3.time.format("%Y-%m-%d").parse;
@@ -128,7 +128,7 @@ svg.append("g")
     .attr("y", 6)
     .attr("dy", ".71em")
     .style("text-anchor", "end")
-    .text("Max Temperature \xB0 C");
+    .text("Temperature \xB0 C");
 
 svg.append("path")
     .datum(chartData)
