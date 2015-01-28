@@ -60,7 +60,11 @@ getFeatureInfoUrl: function (latlng) {
 },
 
 showGetFeatureInfo: function (err, latlng, content) {
- console.log(content.getElementsByTagName('time')[0].innerHTML.substr(0,10))
+    chartData = [];
+console.log(content.getElementsByTagName('time'))
+d3.select("#theChart")
+       .remove();
+
     // loop though time / values and create object
     for (i = 0; i <12; i++) { 
       chartData.push({
@@ -72,14 +76,13 @@ showGetFeatureInfo: function (err, latlng, content) {
 // make graph here (move later)
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+    width = 450 - margin.left - margin.right,
+    height = 250 - margin.top - margin.bottom;
 
 var parseDate = d3.time.format("%Y-%m-%d").parse;
 
 chartData.forEach(function(d) {
     d.x = parseDate(d.x);
-    console.log(d.x)
 });
 
 var x = d3.time.scale()
@@ -102,6 +105,7 @@ var line = d3.svg.line()
         return y(d.y); });
 
 var svg = d3.select("#chart").append("svg")
+    .attr("id","theChart")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
@@ -131,27 +135,7 @@ svg.append("path")
     .attr("class", "line")
     .attr("d", line);
 
-// var graph = new Rickshaw.Graph( {
-//         element: document.querySelector("#chart"),
-//         renderer: 'line',
-//         width: 800,
-//         height: 250,
-//         series: [ {
-//                 color: 'steelblue',
-//                 data: chartData
-//         } ]
-// } );
 
-// var y_ticks = new Rickshaw.Graph.Axis.Y( {
-//     graph: graph,
-//     orientation: 'left',
-//     tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-//     element: document.getElementById('y_axis'),
-// } );
-
-
-// graph.render();
-//
 
 // console.log(content.getElementsByTagName('time'))
     // Otherwise show the content in a popup, or something.
