@@ -136,6 +136,13 @@ svg.append("path")
     .attr("class", "line")
     .attr("d", line);
 
+svg.selectAll("circle")
+    .data(chartData)
+    .enter()
+    .append("circle")
+    .attr("r", 3.5)
+    .attr("cx", function(d) { return x(d.x); })
+    .attr("cy", function(d) { return y(d.y); });
 
 
 // console.log(content.getElementsByTagName('time'))
