@@ -93,7 +93,8 @@ var y = d3.scale.linear()
 
 var xAxis = d3.svg.axis()
     .scale(x)
-    .orient("bottom");
+    .orient("bottom")
+    .tickFormat(d3.time.format("%b"));
 
 var yAxis = d3.svg.axis()
     .scale(y)
