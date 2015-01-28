@@ -60,7 +60,7 @@ getFeatureInfoUrl: function (latlng) {
 },
 
 showGetFeatureInfo: function (err, latlng, content) {
-   console.log(content.getElementsByTagName('time')[0].innerHTML.substr(0,10))
+ console.log(content.getElementsByTagName('time')[0].innerHTML.substr(0,10))
     // loop though time / values and create object
     for (i = 0; i <12; i++) { 
       chartData.push({
@@ -71,8 +71,65 @@ showGetFeatureInfo: function (err, latlng, content) {
 
 // make graph here (move later)
 
+var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
 
 var parseDate = d3.time.format("%Y-%m-%d").parse;
+
+chartData.forEach(function(d) {
+    d.x = parseDate(d.x);
+    console.log(d.x)
+});
+
+var x = d3.time.scale()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var line = d3.svg.line()
+    .x(function(d) { return x(d.x); })
+    .y(function(d) {
+        return y(d.y); });
+
+var svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+x.domain(d3.extent(chartData, function(d) {return d.x;}));
+y.domain(d3.extent(chartData, function(d) {return d.y;}));
+
+svg.append("g") //x axis group
+    .attr("class", "x axisC")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+
+svg.append("g")
+    .attr("class", "y axisC")
+    .call(yAxis)
+  .append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 6)
+    .attr("dy", ".71em")
+    .style("text-anchor", "end")
+    .text("Max Temperature \xB0 C");
+
+svg.append("path")
+    .datum(chartData)
+    .attr("class", "line")
+    .attr("d", line);
 
 // var graph = new Rickshaw.Graph( {
 //         element: document.querySelector("#chart"),
@@ -100,10 +157,10 @@ var parseDate = d3.time.format("%Y-%m-%d").parse;
     // Otherwise show the content in a popup, or something.
   // chartData =content.getElementsByTagName('value');
 
-    L.popup({ maxWidth: 800})
-      .setLatLng(latlng)
-      .setContent(content.getElementsByTagName('value')[0].innerHTML)
-      .openOn(map);
+  L.popup({ maxWidth: 800})
+  .setLatLng(latlng)
+  .setContent(content.getElementsByTagName('value')[0].innerHTML)
+  .openOn(map);
 }
 });
 
