@@ -365,13 +365,14 @@ d3.json("canada.json", function(error, merged) {
 
 var wmsL;
 function drawMap(date){
-
+console.log(date)
   wmsL = L.tileLayer.betterWms("http://tools.pacificclimate.org/ncWMS-PCIC/wms", {
     layers: 'tmax_monClim_PRISM_historical_run1_197101-200012/tmax',
     format: 'image/png',
     maxZoom: 14,
     minZoom: 0,
     transparent: 'true',
+    month: date,
     time: '1985-'+date+'-15',
     styles: 'boxfill/rainbow',
     logscale: false,

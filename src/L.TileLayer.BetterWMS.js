@@ -61,7 +61,6 @@ getFeatureInfoUrl: function (latlng) {
 
 showGetFeatureInfo: function (err, latlng, content) {
     chartData = [];
-console.log(content.getElementsByTagName('time'))
 d3.select("#theChart")
        .remove();
 
@@ -145,13 +144,13 @@ svg.selectAll("circle")
     .attr("cy", function(d) { return y(d.y); });
 
 
-// console.log(content.getElementsByTagName('time'))
+console.log(this.wmsParams.month)
     // Otherwise show the content in a popup, or something.
   // chartData =content.getElementsByTagName('value');
 
   L.popup({ maxWidth: 800})
   .setLatLng(latlng)
-  .setContent(content.getElementsByTagName('value')[0].innerHTML)
+  .setContent(content.getElementsByTagName('value')[this.wmsParams.month].innerHTML)
   .openOn(map);
 }
 });
