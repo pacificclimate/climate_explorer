@@ -1,4 +1,3 @@
-var chartData = [];
 L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
   onAdd: function (map) {
@@ -68,8 +67,8 @@ getFeatureInfoUrl: function (latlng) {
 
 showGetFeatureInfo: function (err, latlng, content) {
     chartData = [];
-d3.select("#theChart")
-       .remove();
+// d3.select("#theChart")
+//        .remove();
     // d3.select("#theChart")
 
     // loop though time / values and create object
@@ -82,9 +81,9 @@ d3.select("#theChart")
 
 // make graph here (move later)
 
-var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 960 /2 - margin.left - margin.right,
-    height = 250 - margin.top - margin.bottom;
+// var margin = {top: 20, right: 20, bottom: 30, left: 50},
+//     width = 960 /2 - margin.left - margin.right,
+//     height = 250 - margin.top - margin.bottom;
 
 var parseDate = d3.time.format("%Y-%m-%d").parse;
 
@@ -92,65 +91,90 @@ chartData.forEach(function(d) {
     d.x = parseDate(d.x);
 });
 
-var x = d3.time.scale()
-    .range([0, width]);
-
-var y = d3.scale.linear()
-    .range([height, 0]);
-
-var xAxis = d3.svg.axis()
-    .scale(x)
-    .orient("bottom")
-    .tickFormat(d3.time.format("%b"));
-
-var yAxis = d3.svg.axis()
-    .scale(y)
-    .orient("left");
-
-var line = d3.svg.line()
-    .x(function(d) { return x(d.x); })
-    .y(function(d) {
-        return y(d.y); });
-
-var svg = d3.select("#chart").append("svg")
-    .attr("id","theChart")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 
 x.domain(d3.extent(chartData, function(d) {return d.x;}));
 y.domain(d3.extent(chartData, function(d) {return d.y;}));
 
-svg.append("g") //x axis group
-    .attr("class", "x axisC")
-    .attr("transform", "translate(0," + height + ")")
-    .call(xAxis);
-
-svg.append("g")
-    .attr("class", "y axisC")
-    .call(yAxis)
-  .append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("y", 6)
-    .attr("dy", ".71em")
-    .style("text-anchor", "end")
-    .text("Temperature \xB0 C");
-
-svg.append("path")
-    .datum(chartData)
-    .attr("class", "line")
-    .attr("d", line);
-
 svg.selectAll("circle")
     .data(chartData)
-    .enter()
-    .append("circle")
+    .transition()
+    .duration(1000)
     .attr("r", 3.5)
     .attr("cx", function(d) { return x(d.x); })
     .attr("cy", function(d) { return y(d.y); })
     .style("fill", "rgb(214,39,40)");
+
+
+svg.selectAll("path")
+    .datum(chartData)
+    .transition()
+    .duration(1000)
+    .attr("class", "line")
+    .attr("d", line);
+
+
+//Update X axis
+                    svg.select(".x.axisC")
+                        .transition()
+                        .duration(1000)
+                        .call(xAxis);
+                    
+                    //Update Y axis
+                    svg.select(".y.axisC")
+                        .transition()
+                        .duration(1000)
+                        .call(yAxis);
+// var x = d3.time.scale()
+//     .range([0, width]);
+
+// var y = d3.scale.linear()
+//     .range([height, 0]);
+
+// var xAxis = d3.svg.axis()
+//     .scale(x)
+//     .orient("bottom")
+//     .tickFormat(d3.time.format("%b"));
+
+// var yAxis = d3.svg.axis()
+//     .scale(y)
+//     .orient("left");
+
+// var line = d3.svg.line()
+//     .x(function(d) { return x(d.x); })
+//     .y(function(d) {
+//         return y(d.y); });
+
+
+
+// var svg = d3.select("#chart").append("svg")
+//     .attr("id","theChart")
+//     .attr("width", width + margin.left + margin.right)
+//     .attr("height", height + margin.top + margin.bottom)
+//   .append("g")
+//     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+
+
+// svg.append("g") //x axis group
+//     .attr("class", "x axisC")
+//     .attr("transform", "translate(0," + height + ")")
+//     .call(xAxis);
+
+// svg.append("g")
+//     .attr("class", "y axisC")
+//     .call(yAxis)
+//   .append("text")
+//     .attr("transform", "rotate(-90)")
+//     .attr("y", 6)
+//     .attr("dy", ".71em")
+//     .style("text-anchor", "end")
+//     .text("Temperature \xB0 C");
+
+// svg.append("path")
+//     .datum(chartData)
+//     .attr("class", "line")
+//     .attr("d", line);
 
 
 
