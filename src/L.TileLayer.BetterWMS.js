@@ -52,10 +52,17 @@ getFeatureInfoUrl: function (latlng) {
       query_layers: this.wmsParams.layers,
       info_format: 'text/xml'
   };
-  
-  params[params.version === '1.3.0' ? 'i' : 'x'] = point.x;
-  params[params.version === '1.3.0' ? 'j' : 'y'] = point.y;
-  
+    // implemented from http://gis.stackexchange.com/questions/109414/leaflet-wms-getfeatureinfo-gives-result-only-on-zoom-level-10/132336#132336
+    var bds = map.getBounds();
+    var sz = map.getSize();
+    var w = bds.getNorthEast().lng - bds.getSouthWest().lng;
+    var h = bds.getNorthEast().lat - bds.getSouthWest().lat;
+    var X2= (((latlng.lng - bds.getSouthWest().lng) / w) * sz.x).toFixed(0);
+    var Y2 = (((bds.getNorthEast().lat - latlng.lat) / h) * sz.y).toFixed(0);
+
+  params[params.version === '1.3.0' ? 'i' : 'x'] = X2;
+  params[params.version === '1.3.0' ? 'j' : 'y'] = Y2;
+
   return this._url + L.Util.getParamString(params, this._url, true);
 },
 
@@ -63,6 +70,7 @@ showGetFeatureInfo: function (err, latlng, content) {
     chartData = [];
 d3.select("#theChart")
        .remove();
+    // d3.select("#theChart")
 
     // loop though time / values and create object
     for (i = 0; i <12; i++) { 
@@ -75,7 +83,7 @@ d3.select("#theChart")
 // make graph here (move later)
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 450 - margin.left - margin.right,
+    width = 960 /2 - margin.left - margin.right,
     height = 250 - margin.top - margin.bottom;
 
 var parseDate = d3.time.format("%Y-%m-%d").parse;
@@ -144,9 +152,12 @@ svg.selectAll("circle")
     .attr("cy", function(d) { return y(d.y); })
     .style("fill", "rgb(214,39,40)");
 
+
+
+
 // round to 2 decimal places. Causes NaN on none...
-// var temp = content.getElementsByTagName('value')[this.wmsParams.month].innerHTML;
-console.log(this.wmsParams.month)
+// var temp = Math.floor((content.getElementsByTagName('value')[this.wmsParams.month-1].innerHTML) * 100) / 100;
+// console.log(temp)
     // Otherwise show the content in a popup, or something.
   // chartData =content.getElementsByTagName('value');
 

@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8" />
+    <meta charset="utf-8" />
 
-<style>
-@import url(//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css);
+    <style>
+    @import url(//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css);
 
-#map {
-width: 960px;
-height: 500px;
-background: #a6cef5;
-}
-svg {
-position: relative;
-}
+    #map {
+        width: 960px;
+        height: 500px;
+        background: #ddd;
+    }
+    svg {
+        position: relative;
+    }
 
-.canada {
+    .canada {
 
-stroke: #fff;
-stroke-width: 1px;
-}
+        stroke: #fff;
+        stroke-width: 1px;
+    }
 
 /*.ocean {
 fill: blue;
@@ -27,9 +27,9 @@ fill-opacity: .3;
 }  */
 
 .us{
-fill: #bdbdbd;
-stroke: #fff;
-stroke-width: 1px;
+    fill: #bdbdbd;
+    stroke: #fff;
+    stroke-width: 1px;
 }
 /*  path:hover {
 fill: brown;
@@ -42,47 +42,47 @@ fill-opacity: .7;
 }*/
 
 .axis .domain {
-fill: none;
-stroke: #000;
-stroke-opacity: .3;
-stroke-width: 10px;
-stroke-linecap: round;
+    fill: none;
+    stroke: #000;
+    stroke-opacity: .3;
+    stroke-width: 10px;
+    stroke-linecap: round;
 
 }
 .tick line {
-stroke: #aaa;
-shape-rendering: crispEdges;
+    stroke: #aaa;
+    shape-rendering: crispEdges;
 }
 
 
 
 .axis .halo {
-fill: none;
-stroke: #fff;
-stroke-width: 8px;
-stroke-linecap: round;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 8px;
+    stroke-linecap: round;
 }
 
 .g-slider {
-fill: white;
+    fill: white;
 }
 
 .g-slider .background {
-cursor: ew-resize !important;
+    cursor: ew-resize !important;
 }
 .g-slider .handle {
-fill: #fff;
-stroke: #000;
-stroke-width: 1.0px;
-pointer-events: none;
+    fill: #fff;
+    stroke: #000;
+    stroke-width: 1.0px;
+    pointer-events: none;
 
 }
 
 #slider {
-position: absolute;
-left: 40px;
-top: 360px;
-font-size: 0.8em;
+    position: absolute;
+    left: 40px;
+    top: 360px;
+    font-size: 0.8em;
 }
 
 
@@ -115,19 +115,15 @@ font-size: 0.8em;
 <div id="slider"></div>
 
 <div id="chart_container">
-    <div id="y_axis"></div>
-    <div id="chart"></div>
+<div id="y_axis"></div>
+<div id="chart"></div>
 </div>
 
 <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/proj4js-compressed.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
 <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-<!-- <script src="rickshaw/rickshaw.js"></script>
-<link type="text/css" rel="stylesheet" href="http://code.shutterstock.com/rickshaw/src/css/graph.css">
-<link type="text/css" rel="stylesheet" href="http://code.shutterstock.com/rickshaw/examples/css/lines.css">
-
-<script src="rickshaw/chart.js"></script> -->
+<script src="http://d3js.org/queue.v1.min.js"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.js"></script>
 <script src="proj4-compressed.js"></script>
 <script src="src/proj4leaflet.js"></script>
@@ -136,23 +132,23 @@ font-size: 0.8em;
 <script>
 
 var crs = new L.Proj.CRS('EPSG:3005',
-  '+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs',
-  {
-    resolutions: [
-    6192, 3000, 2048, 1024, 512, 256, 128,
-    64, 32, 16, 8, 4, 2, 1, 0.5
-    ],
-    origin: [0, 0]
+'+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs',
+{
+resolutions: [
+4592, 3000, 1648, 1024, 512, 256, 128,
+64, 32, 16, 8, 4, 2, 1, 0.5
+],
+origin: [0, 0]
 }),
 southWest = L.latLng(46.851760 , -142.734375),
 northEast = L.latLng(60.364901 , -110.917969),
 bounds = L.latLngBounds(southWest, northEast);
 
 map = new L.Map('map', {
-  crs: crs,
-  continuousWorld: true,
-  worldCopyJump: false,
-  maxBounds: bounds
+crs: crs,
+continuousWorld: true,
+worldCopyJump: false,
+maxBounds: bounds
 });
 
 // precip layer
@@ -164,208 +160,216 @@ map = new L.Map('map', {
 map.setView([54, -122.9364], 1);
 
 
-var sliderWidth = 260,
-sliderHeight = 30;
-
-var margin = {top: 10, right: 10, bottom: 10, left: 10}
-
-var current = {"month":1},
-maxValue = 12,
-moving;
-
-var sliderContainer = d3.select("#slider").append("svg")
-.attr("width", sliderWidth + margin.left + margin.right + 10)
-.attr("height", sliderHeight + margin.top + margin.bottom)
-.append("g")
-.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-var x = d3.scale.linear()
-.domain([1,12])
-.range([0, sliderWidth])
-.clamp(true);
-
-var brushToMonth = d3.scale.threshold()
-.domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
-.range([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-
-var brush = d3.svg.brush()
-.x(x)
-.extent([current.month, current.month])
-.on("brush", brushed);
-
-var xTicks = {
-  "1": "Jan",
-  "2": "",
-  "3": "Mar",
-  "4": "",
-  "5": "May",
-  "6": "",
-  "7": "Jul",
-  "8": "",
-  "9": "Sep",
-  "10": "",
-  "11": "Nov",
-  "12": ""
-};
-
-var xAxis = d3.svg.axis()
-.scale(x)
-.orient("button")
-.ticks(12)
-.tickFormat(function(d) {
-  return xTicks[d];
-})
-.tickSize(10, 0)
-.tickPadding(0);
-
-sliderContainer.append("g")
-.attr("class", "x axis")
-.attr("transform", "translate(0," + sliderHeight / 2 + ")")
-.call(d3.svg.axis()
-  .scale(x)
-  .orient("button")
-  .ticks(12)
-  .tickFormat(function(d) {
-    return xTicks[d];
-})
-  .tickSize(0)
-  .tickPadding(12))
-.select(".domain")
-.select(function() {
-  return this.parentNode.appendChild(this.cloneNode(true));
-})    
-.attr("class", "halo");
-
-sliderContainer.call(xAxis)
-
-var slider = sliderContainer.append("g")
-.attr("class", "g-slider")
-.call(brush);
-
-slider.selectAll(".extent, .resize").remove();
-
-slider.select(".background")
-.attr("height", sliderHeight);
-
-var handle = slider.append("circle")
-.attr("class", "handle")
-.attr("transform", "translate(0," + sliderHeight / 2 + ")")
-.attr("r", 9);
-
-drawMap(1)
+queue()
+    .defer(d3.json, "canada.json")
+    .defer(d3.json, "us.json")
+    .defer(d3.json, "ocean.json")
+    .await(ready);
 
 
-var svg = d3.select(map.getPanes().overlayPane).append("svg"),
-g = svg.append("g").attr("class", "leaflet-zoom-hide");
+function ready(error, canada, us, ocean){
+
+    var sliderWidth = 260,
+    sliderHeight = 30;
+
+    var margin = {top: 10, right: 10, bottom: 10, left: 10}
+
+    var current = {"month":1},
+    maxValue = 12,
+    moving;
+
+    var sliderContainer = d3.select("#slider").append("svg")
+        .attr("width", sliderWidth + margin.left + margin.right + 10)
+        .attr("height", sliderHeight + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var x = d3.scale.linear()
+        .domain([1,12])
+        .range([0, sliderWidth])
+        .clamp(true);
+
+    var brushToMonth = d3.scale.threshold()
+        .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+        .range([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+
+    var brush = d3.svg.brush()
+        .x(x)
+        .extent([current.month, current.month])
+        .on("brush", brushed);
+
+    var xTicks = {
+        "1": "Jan",
+        "2": "",
+        "3": "Mar",
+        "4": "",
+        "5": "May",
+        "6": "",
+        "7": "Jul",
+        "8": "",
+        "9": "Sep",
+        "10": "",
+        "11": "Nov",
+        "12": ""
+    };
+
+    var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("button")
+    .ticks(12)
+    .tickFormat(function(d) {
+        return xTicks[d];
+    })
+    .tickSize(10, 0)
+    .tickPadding(0);
+
+    var svg = d3.select(map.getPanes().overlayPane).append("svg"),
+    g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
 
 
-d3.json("canada.json", function(error, merged) {
-  if (error) return console.error(error);
 
-  d3.json("ocean.json", function(error, ocean) {
-    if (error) return console.error(error);
+    var merged = canada;
+    var collection = us;
+
     var pacific = topojson.feature(ocean, ocean.objects.ocean);
 
-    d3.json("us.json", function(error, collection) {
-      if (error) return console.error(error);
 
-    // first variable is used to center and scale map the viewport
-    var bTopo = topojson.feature(merged, merged.objects.canada),
-    topo = bTopo.features;
-    feature = topo;
+// first variable is used to center and scale map the viewport
+var bTopo = topojson.feature(merged, merged.objects.canada),
+topo = bTopo.features;
+feature = topo;
 
-    svg.selectAll("path")
+svg.selectAll("path")
     .data(topo)
     .enter()
     .append("path");
 
 
-    var transform = d3.geo.transform({point: projectPoint}),
-    path = d3.geo.path().projection(transform);
+var transform = d3.geo.transform({point: projectPoint}),
+path = d3.geo.path().projection(transform);
 
-    var feature = g.selectAll("path")
+var feature = g.selectAll("path")
     .data(bTopo.features)
     .enter()
     .append("path")
-    .attr("class","canada");;
+    .attr("class","canada");
 
 
 
-    map.on("viewreset", reset);
+map.on("viewreset", reset);
 
 
 
-    var feature1 = g.selectAll("path1")
+var feature1 = g.selectAll("path1")
     .data(collection.features)
     .enter().append("path")
     .attr("class","us");
 
-    var ocean = g.selectAll("path2")
+var ocean = g.selectAll("path2")
     .data(pacific.features)
     .enter().append("path")
     .attr("class","ocean");
 
-    reset();
 
-    function reset() {
 
-        var bounds = path.bounds(collection), //Use US for the projection bounds
+drawMap(1)
+
+sliderContainer.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + sliderHeight / 2 + ")")
+    .call(d3.svg.axis()
+        .scale(x)
+        .orient("button")
+        .ticks(12)
+        .tickFormat(function(d) {
+            return xTicks[d];
+        })
+        .tickSize(0)
+        .tickPadding(12))
+    .select(".domain")
+    .select(function() {
+        return this.parentNode.appendChild(this.cloneNode(true));
+    })    
+    .attr("class", "halo");
+
+sliderContainer.call(xAxis)
+
+var slider = sliderContainer.append("g")
+    .attr("class", "g-slider")
+    .call(brush);
+
+slider.selectAll(".extent, .resize").remove();
+
+slider.select(".background")
+    .attr("height", sliderHeight);
+
+var handle = slider.append("circle")
+    .attr("class", "handle")
+    .attr("transform", "translate(0," + sliderHeight / 2 + ")")
+    .attr("r", 9);
+
+
+
+
+reset();
+
+function reset() {
+
+    var bounds = path.bounds(collection), //Use US for the projection bounds
         topLeft = bounds[0],
         bottomRight = bounds[1];
 
-        svg.attr("width", bottomRight[0] - topLeft[0])
+    svg.attr("width", bottomRight[0] - topLeft[0])
         .attr("height", bottomRight[1] - topLeft[1])
         .style("left", topLeft[0] + "px")
         .style("top", topLeft[1] + "px");
 
-        g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+    g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
 
-        feature.attr("d", path)
+    feature.attr("d", path)
         .style("fill", function(d){
-            // console.log(d)
-            if (d.properties.province == "British Columbia") {
-              return "none"
-          } else { 
-              return "#ddd";
-          }
-      })
+        // console.log(d)
+        if (d.properties.province == "British Columbia") {
+            return "none"
+        } else { 
+            return "#ddd";
+        }
+        })
         feature1.attr("d", path)
         .style("fill", "#ddd");
         ocean.attr("d", path)
         .style("fill", "#a6cef5");
 
-    }
+}
 
-    function projectPoint(x, y) {
-        var point = map.latLngToLayerPoint(new L.LatLng(y, x));
-        this.stream.point(point.x, point.y);
-    };
-});
-});
+function projectPoint(x, y) {
+    var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+    this.stream.point(point.x, point.y);
+};
 
-});
 
 var wmsL;
 function drawMap(date){
-console.log(date)
-  wmsL = L.tileLayer.betterWms("http://tools.pacificclimate.org/ncWMS-PCIC/wms", {
-    layers: 'tmax_monClim_PRISM_historical_run1_197101-200012/tmax',
-    format: 'image/png',
-    maxZoom: 14,
-    minZoom: 0,
-    transparent: 'true',
-    month: date,
-    time: '1985-'+date+'-15',
-    styles: 'boxfill/rainbow',
-    logscale: false,
-    numcolorbands: 254,
-    version: '1.1.1',
-    continuousWorld: true
-});
-  wmsL.addTo(map)
-  
-  
+    console.log(date)
+    wmsL = L.tileLayer.betterWms("http://tools.pacificclimate.org/ncWMS-PCIC/wms", {
+        layers: 'tmax_monClim_PRISM_historical_run1_197101-200012/tmax',
+        format: 'image/png',
+        maxZoom: 14,
+        minZoom: 0,
+        transparent: 'true',
+        month: date,
+        time: '1985-'+date+'-15',
+        styles: 'boxfill/rainbow',
+        logscale: false,
+        numcolorbands: 254,
+        version: '1.1.1',
+        continuousWorld: true
+    });
+    wmsL.addTo(map)
+
+console.log(chartData)
+
 }
 
 function brushed() {
@@ -388,6 +392,8 @@ function brushed() {
 }
 
 
+
+}
 
 
 
