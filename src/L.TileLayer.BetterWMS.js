@@ -32,8 +32,9 @@ getFeatureInfo: function (evt) {
 },
 
 getFeatureInfoUrl: function (latlng) {
+    var point = [];
     // Construct a GetFeatureInfo request URL given a point
-    var point = this._map.latLngToContainerPoint(latlng, this._map.getZoom()),
+    point = this._map.latLngToContainerPoint(latlng, this._map.getZoom()),
     size = this._map.getSize(),
     params = {
       request: 'GetFeatureInfo',
@@ -133,18 +134,10 @@ svg.selectAll("circle")
     .style("fill", "rgb(214,39,40)");
     
 
-
-svg.selectAll("path")
-    .datum(chartData)
-    .append("path")
-    .attr("class", "line")
-    .attr("d", line);
-
 svg.selectAll("path")
     .transition()
     .duration(1000)
-    .attr("class", "line")
-    .attr("d", line);
+    .attr("d", line(chartData));
 
 
 //Update X axis

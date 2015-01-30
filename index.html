@@ -476,9 +476,8 @@ svg.append("g") //x axis group
 //     .text("Temperature \xB0 C");
 
 svg.append("path")
-    .datum(chartData)
     .attr("class", "line")
-    .attr("d", line);
+    .attr("d", line(chartData));
 
 svg.selectAll("circle")
     .data(chartData)
