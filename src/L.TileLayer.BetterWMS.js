@@ -15,6 +15,7 @@ onRemove: function (map) {
 },
 
 getFeatureInfo: function (evt) {
+
     // Make an AJAX request to the server 
     var url = this.getFeatureInfoUrl(evt.latlng),
     showResults = L.Util.bind(this.showGetFeatureInfo, this);
@@ -66,17 +67,34 @@ getFeatureInfoUrl: function (latlng) {
 },
 
 showGetFeatureInfo: function (err, latlng, content) {
-    chartData = [];
-// d3.select("#theChart")
-//        .remove();
-    // d3.select("#theChart")
+
+// this is added to make text visible but only add once
+while (counter <1) {
+
+        svg.append("g")
+        .attr("class", "y axisC")
+        .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Temperature \xB0 C");
+
+    counter++;
+
+}
+
+
+chartData = [];
+
 
     // loop though time / values and create object
-    for (i = 0; i <12; i++) { 
-      chartData.push({
-        x:content.getElementsByTagName('time')[i].innerHTML.substr(0,10),
-        y: Number(content.getElementsByTagName('value')[i].innerHTML)})
-  }
+for (i = 0; i <12; i++) { 
+  chartData.push({
+    x:content.getElementsByTagName('time')[i].innerHTML.substr(0,10),
+    y: Number(content.getElementsByTagName('value')[i].innerHTML)})
+}
 
 
 // make graph here (move later)
@@ -93,20 +111,36 @@ chartData.forEach(function(d) {
 
 
 x.domain(d3.extent(chartData, function(d) {return d.x;}));
-y.domain(d3.extent(chartData, function(d) {return d.y;}));
+y.domain([-20, 30]);
+
+// y.domain(d3.extent(chartData, function(d) {return d.y;}));
 
 svg.selectAll("circle")
     .data(chartData)
+    .enter()
+    .append("circle")
+    .attr("r", 3.5)
+    .attr("cx", function(d) { return x(d.x); })
+    .attr("cy", function(d) { return y(d.y); })
+    .style("fill", "rgb(214,39,40)");
+
+svg.selectAll("circle")
     .transition()
     .duration(1000)
     .attr("r", 3.5)
     .attr("cx", function(d) { return x(d.x); })
     .attr("cy", function(d) { return y(d.y); })
     .style("fill", "rgb(214,39,40)");
+    
 
 
 svg.selectAll("path")
     .datum(chartData)
+    .append("path")
+    .attr("class", "line")
+    .attr("d", line);
+
+svg.selectAll("path")
     .transition()
     .duration(1000)
     .attr("class", "line")
@@ -114,16 +148,22 @@ svg.selectAll("path")
 
 
 //Update X axis
-                    svg.select(".x.axisC")
-                        .transition()
-                        .duration(1000)
-                        .call(xAxis);
-                    
-                    //Update Y axis
-                    svg.select(".y.axisC")
-                        .transition()
-                        .duration(1000)
-                        .call(yAxis);
+svg.select(".x.axisC")
+    .call(xAxis);
+
+//Update Y axis
+svg.select(".y.axisC")
+    .transition()
+    .duration(1000)
+    .call(yAxis);
+
+// svg.select(".y.axisC")    
+//     .append("text")
+//     .attr("transform", "rotate(-90)")
+//     .attr("y", 6)
+//     .attr("dy", ".71em")
+//     .style("text-anchor", "end")
+//     .text("Temperature \xB0 C");
 // var x = d3.time.scale()
 //     .range([0, width]);
 

@@ -7,7 +7,7 @@
     @import url(//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css);
 
     #map {
-        width: 960px;
+        width: 760px;
         height: 500px;
         background: #ddd;
     }
@@ -104,6 +104,14 @@ fill-opacity: .7;
 }
 #chart {
   font: 10px sans-serif;
+  
+}
+
+#chart_container {
+    position: absolute;
+    left:760px;
+    top:40px;
+
 }
 
 </style>
@@ -112,13 +120,13 @@ fill-opacity: .7;
 
 <body>
 <p id="map">
-<div id="slider"></div>
+
 
 <div id="chart_container">
-<div id="y_axis"></div>
-<div id="chart"></div>
+    <div id="y_axis"></div>
+    <div id="chart"></div>
 </div>
-
+<div id="slider"></div>
 <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/proj4js-compressed.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
@@ -141,7 +149,7 @@ resolutions: [
 origin: [0, 0]
 }),
 southWest = L.latLng(46.851760 , -142.734375),
-northEast = L.latLng(60.364901 , -110.917969),
+northEast = L.latLng(60.364901 , -114.917969),
 bounds = L.latLngBounds(southWest, northEast);
 
 map = new L.Map('map', {
@@ -169,7 +177,7 @@ queue()
 
 function ready(error, canada, us, ocean){
 
-    var sliderWidth = 260,
+    var sliderWidth = 200,
     sliderHeight = 30;
 
     var margin = {top: 10, right: 10, bottom: 10, left: 10}
@@ -396,15 +404,14 @@ function brushed() {
 
 // testing stuff out
 
+//setup graph but don't show yet.
+
+var counter = 0;
+
+
 var chartData = [];
-      // chartData.push({
-      //   x:'1985-06-15',
-      //   y: 5.21})
-      // chartData.push({
-      //   x:'1985-12-15',
-      //   y: 3.21})
   
-for (i = 0; i <12; i++) { 
+for (i = 1; i <0; i++) { 
       chartData.push({
         x:'1985-'+i+'-15',
         y: i})
@@ -413,7 +420,7 @@ for (i = 0; i <12; i++) {
 // make graph here (move later)
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 960 /2 - margin.left - margin.right,
+    width = 760 /2 - margin.left - margin.right,
     height = 250 - margin.top - margin.bottom;
 
 var parseDate = d3.time.format("%Y-%m-%d").parse;
@@ -438,6 +445,7 @@ var yAxis = d3.svg.axis()
     .orient("left");
 
 var line = d3.svg.line()
+.interpolate("basis")
     .x(function(d) { return x(d.x); })
     .y(function(d) {
         return y(d.y); });
@@ -450,22 +458,22 @@ var svg = d3.select("#chart").append("svg")
 
 
 x.domain(d3.extent(chartData, function(d) {return d.x;}));
-y.domain(d3.extent(chartData, function(d) {return d.y;}));
+y.domain([-20, 30]);
 
 svg.append("g") //x axis group
     .attr("class", "x axisC")
     .attr("transform", "translate(0," + height + ")")
     .call(xAxis);
 
-svg.append("g")
-    .attr("class", "y axisC")
-    .call(yAxis)
-  .append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("y", 6)
-    .attr("dy", ".71em")
-    .style("text-anchor", "end")
-    .text("Temperature \xB0 C");
+// svg.append("g")
+//     .attr("class", "y axisC")
+//     .call(yAxis)
+//   .append("text")
+//     .attr("transform", "rotate(-90)")
+//     .attr("y", 6)
+//     .attr("dy", ".71em")
+//     .style("text-anchor", "end")
+//     .text("Temperature \xB0 C");
 
 svg.append("path")
     .datum(chartData)
@@ -480,6 +488,11 @@ svg.selectAll("circle")
     .attr("cx", function(d) { return x(d.x); })
     .attr("cy", function(d) { return y(d.y); })
     .style("fill", "rgb(214,39,40)");
+
+
+
+
+
 
 </script>
 
