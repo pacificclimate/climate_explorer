@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <link rel="stylesheet" href="main.css"> 
 
     <style>
     @import url(//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css);
@@ -119,6 +120,8 @@ fill-opacity: .7;
 
 
 <body>
+ <h1>British Columbia High-Resolution PRISM Climatology</h1>
+    
 <p id="map">
 
 
@@ -136,6 +139,8 @@ fill-opacity: .7;
 <script src="proj4-compressed.js"></script>
 <script src="src/proj4leaflet.js"></script>
 <script src="src/L.TileLayer.BetterWMS.js"></script>
+
+<script type='text/javascript' src="http://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
 
 <script>
 
@@ -359,8 +364,7 @@ function projectPoint(x, y) {
 
 var wmsL;
 function drawMap(date){
-    console.log(date)
-    wmsL = L.tileLayer.betterWms("http://tools.pacificclimate.org/ncWMS-PCIC/wms", {
+    wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
         layers: 'tmax_monClim_PRISM_historical_run1_197101-200012/tmax',
         format: 'image/png',
         maxZoom: 14,
@@ -374,6 +378,8 @@ function drawMap(date){
         version: '1.1.1',
         continuousWorld: true
     });
+        console.log(wmsL)
+
     wmsL.addTo(map)
 
 

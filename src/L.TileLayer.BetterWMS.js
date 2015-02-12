@@ -21,6 +21,8 @@ getFeatureInfo: function (evt) {
     showResults = L.Util.bind(this.showGetFeatureInfo, this);
     $.ajax({
       url: url,
+      type: 'GET',
+                crossDomain: true, // enable this
       success: function (data, status, xhr) {
         var err = typeof data === 'string' ? null : data;
         showResults(err, evt.latlng, data);
