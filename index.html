@@ -121,8 +121,11 @@ fill-opacity: .7;
 
 <body>
  <h1>British Columbia High-Resolution PRISM Climatology</h1>
+
  <p>Click on the map to see montly trends for that location</p>   
+
 <p id="map">
+
 
 
 <div id="chart_container">
@@ -130,6 +133,9 @@ fill-opacity: .7;
     <div id="chart"></div>
 </div>
 <div id="slider"></div>
+
+<div>  <img id="scaleBar" class="scaleBar" width="20" height="200" src="http://prism.noip.me:82/ncWMS/wms?REQUEST=GetLegendGraphic&amp;COLORBARONLY=true&amp;WIDTH=1&amp;HEIGHT=398&amp;PALETTE=rainbow&amp;NUMCOLORBANDS=254" alt="scale bar"style="visibility: visible;"><div>
+
 <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/proj4js-compressed.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
