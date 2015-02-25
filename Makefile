@@ -6,11 +6,23 @@ build/gpr_000b11a_e.shp: build/gpr_000b11a_e.zip
 	unzip -od $(dir $@) $<
 	touch $@
 
-build/canada.shp: build/gpr_000b11a_e.shp
-	ogr2ogr -t_srs "+proj=aea +lat_1=20 +lat_2=60 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs " \
-	build/canada.shp \
+# build/canada.shp: build/gpr_000b11a_e.shp
+# 	ogr2ogr -t_srs "+proj=aea +lat_1=20 +lat_2=60 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs " \
+# 	build/canada.shp \
+# 	build/gpr_000b11a_e.shp
+# this is for PCICwms
+build/canada.json: build/gpr_000b11a_e.shp
+	ogr2ogr -f GeoJSON -t_srs "+proj=latlong +datum=WGS84" \
+	build/canada.json \
 	build/gpr_000b11a_e.shp
 
+
+canada.json: build/canada.json
+	node_modules/.bin/topojson \
+		-o $@ \
+		-s 1e-8 \
+		--properties='province=PRENAME' \
+		-- $<
 # build/BC.json: build/gpr_000b11a_e.shp
 # 	ogr2ogr -f GeoJSON \
 # 	-t_srs "+proj=aea +lat_1=20 +lat_2=60 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs " \
@@ -58,9 +70,8 @@ build/final.tiff: build/tempCol.tiff
 build/relief.tiff: build/final.tiff
 	gdalwarp \
 	  -r lanczos \
-	  -ts 960 0 \
+	  -ts 960 600 \
 	  -t_srs "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs" \
-  -te -2950000 1000000 -1000000 2950000 \
 	  build/final.tiff \
 	  build/relief.tiff
 
@@ -83,18 +94,18 @@ us.json: us-states.json
 		--simplify=0.5 \
 	    -- us=$<
 
-build/finalWms.tiff: build/testWms.tif
-	gdalwarp \
-	  -r lanczos \
-	  -t_srs EPSG:3857 \
-	  build/testWms.tif \
-	  build/finalWms.tiff
+# build/finalWms.tiff: build/testWms.tif
+# 	gdalwarp \
+# 	  -r lanczos \
+# 	  -t_srs EPSG:3857 \
+# 	  build/testWms.tif \
+# 	  build/finalWms.tiff
 
-build/reliefWms.tiff: build/finalWms.tiff
-	gdalwarp \
-	  -r lanczos \
-	  -ts 960 0 \
-	  -t_srs "+proj=aea +lat_1=20 +lat_2=60 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs " \
-  -te -2950000 1000000 -1000000 2950000 \
-	  build/finalWms.tiff \
-	  build/reliefWms.tiff
+# build/reliefWms.tiff: build/finalWms.tiff
+# 	gdalwarp \
+# 	  -r lanczos \
+# 	  -ts 960 0 \
+# 	  -t_srs "+proj=aea +lat_1=20 +lat_2=60 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs " \
+#   -te -2950000 1000000 -1000000 2950000 \
+# 	  build/finalWms.tiff \
+# 	  build/reliefWms.tiff

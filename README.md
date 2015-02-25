@@ -15,4 +15,5 @@ projection needs to be $EPSG:4269 - NAD83
 convert to Geotiff and select band (band represents month number)
 gdal_translate -of GTiff NETCDF:"/Users/mathewbrown/projects/PCIC/tmax.nc":tmax -b 3 /Users/mathewbrown/projects/PCIC/build/mar.tif
 
-- TO this final step, then load into QGIS and set color. Save as rendered image and then run makefile
+
+

@@ -10,7 +10,7 @@
     #map {
         width: 760px;
         height: 500px;
-        background: #ddd;
+        background: none;
     }
     svg {
         position: relative;
@@ -134,8 +134,6 @@ fill-opacity: .7;
 </div>
 <div id="slider"></div>
 
-<div>  <img id="scaleBar" class="scaleBar" width="20" height="200" src="http://prism.noip.me:82/ncWMS/wms?REQUEST=GetLegendGraphic&amp;COLORBARONLY=true&amp;WIDTH=1&amp;HEIGHT=398&amp;PALETTE=rainbow&amp;NUMCOLORBANDS=254" alt="scale bar"style="visibility: visible;"><div>
-
 <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/proj4js-compressed.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
@@ -149,25 +147,26 @@ fill-opacity: .7;
 <script type='text/javascript' src="http://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
 
 <script>
+var width = 760,
+    height = 500;
 
 var crs = new L.Proj.CRS('EPSG:3005',
-'+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs',
-{
-resolutions: [
-4592, 3000, 1648, 1024, 512, 256, 128,
-64, 32, 16, 8, 4, 2, 1, 0.5
-],
-origin: [0, 0]
-}),
-southWest = L.latLng(46.851760 , -142.734375),
-northEast = L.latLng(60.364901 , -114.917969),
-bounds = L.latLngBounds(southWest, northEast);
+        '+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs', {
+            resolutions: [
+                4592, 3000, 1648, 1024, 512, 256, 128,
+                64, 32, 16, 8, 4, 2, 1, 0.5
+            ],
+            origin: [0, 0]
+        }),
+    southWest = L.latLng(46.851760, -142.734375),
+    northEast = L.latLng(60.364901, -114.917969),
+    bounds = L.latLngBounds(southWest, northEast);
 
 map = new L.Map('map', {
-crs: crs,
-continuousWorld: true,
-worldCopyJump: false,
-maxBounds: bounds
+    crs: crs,
+    continuousWorld: true,
+    worldCopyJump: false,
+    maxBounds: bounds
 });
 
 // precip layer
@@ -178,6 +177,10 @@ maxBounds: bounds
 
 map.setView([54, -122.9364], 1);
 
+       // var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:band1&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
+       //      imageBounds = [[61.5, -113.05], [47.1, -146]];
+
+       //  L.imageOverlay(imageUrl, imageBounds).addTo(map);
 
 queue()
     .defer(d3.json, "canada.json")
@@ -186,16 +189,23 @@ queue()
     .await(ready);
 
 
-function ready(error, canada, us, ocean){
+function ready(error, canada, us, ocean) {
 
     var sliderWidth = 200,
-    sliderHeight = 30;
+        sliderHeight = 30;
 
-    var margin = {top: 10, right: 10, bottom: 10, left: 10}
+    var margin = {
+        top: 10,
+        right: 10,
+        bottom: 10,
+        left: 10
+    }
 
-    var current = {"month":1},
-    maxValue = 12,
-    moving;
+    var current = {
+            "month": 1
+        },
+        maxValue = 12,
+        moving;
 
     var sliderContainer = d3.select("#slider").append("svg")
         .attr("width", sliderWidth + margin.left + margin.right + 10)
@@ -204,7 +214,7 @@ function ready(error, canada, us, ocean){
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var x = d3.scale.linear()
-        .domain([1,12])
+        .domain([1, 12])
         .range([0, sliderWidth])
         .clamp(true);
 
@@ -233,17 +243,17 @@ function ready(error, canada, us, ocean){
     };
 
     var xAxis = d3.svg.axis()
-    .scale(x)
-    .orient("button")
-    .ticks(12)
-    .tickFormat(function(d) {
-        return xTicks[d];
-    })
-    .tickSize(10, 0)
-    .tickPadding(0);
+        .scale(x)
+        .orient("button")
+        .ticks(12)
+        .tickFormat(function(d) {
+            return xTicks[d];
+        })
+        .tickSize(10, 0)
+        .tickPadding(0);
 
     var svg = d3.select(map.getPanes().overlayPane).append("svg"),
-    g = svg.append("g").attr("class", "leaflet-zoom-hide");
+        g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
 
 
@@ -254,161 +264,183 @@ function ready(error, canada, us, ocean){
     var pacific = topojson.feature(ocean, ocean.objects.ocean);
 
 
-// first variable is used to center and scale map the viewport
-var bTopo = topojson.feature(merged, merged.objects.canada),
-topo = bTopo.features;
-feature = topo;
+    // first variable is used to center and scale map the viewport
+    var bTopo = topojson.feature(merged, merged.objects.canada),
+        topo = bTopo.features;
+    feature = topo;
 
-svg.selectAll("path")
-    .data(topo)
-    .enter()
-    .append("path");
-
-
-var transform = d3.geo.transform({point: projectPoint}),
-path = d3.geo.path().projection(transform);
-
-var feature = g.selectAll("path")
-    .data(bTopo.features)
-    .enter()
-    .append("path")
-    .attr("class","canada");
+    svg.selectAll("path")
+        .data(topo)
+        .enter()
+        .append("path");
 
 
+    var transform = d3.geo.transform({
+            point: projectPoint
+        }),
+        path = d3.geo.path().projection(transform);
 
-map.on("viewreset", reset);
-
-
-
-var feature1 = g.selectAll("path1")
-    .data(collection.features)
-    .enter().append("path")
-    .attr("class","us");
-
-var ocean = g.selectAll("path2")
-    .data(pacific.features)
-    .enter().append("path")
-    .attr("class","ocean");
+    var feature = g.selectAll("path")
+        .data(bTopo.features)
+        .enter()
+        .append("path")
+        .attr("class", "canada")
+        .attr("id", "land");
 
 
 
-drawMap(1)
+    map.on("viewreset", reset);
 
-sliderContainer.append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + sliderHeight / 2 + ")")
-    .call(d3.svg.axis()
-        .scale(x)
-        .orient("button")
-        .ticks(12)
-        .tickFormat(function(d) {
-            return xTicks[d];
+
+
+    var feature1 = g.selectAll("path1")
+        .data(collection.features)
+        .enter().append("path")
+        .attr("class", "us");
+
+    var ocean = g.selectAll("path2")
+        .data(pacific.features)
+        .enter().append("path")
+        .attr("class", "ocean");
+
+
+
+    drawMap(1)
+
+    sliderContainer.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + sliderHeight / 2 + ")")
+        .call(d3.svg.axis()
+            .scale(x)
+            .orient("button")
+            .ticks(12)
+            .tickFormat(function(d) {
+                return xTicks[d];
+            })
+            .tickSize(0)
+            .tickPadding(12))
+        .select(".domain")
+        .select(function() {
+            return this.parentNode.appendChild(this.cloneNode(true));
         })
-        .tickSize(0)
-        .tickPadding(12))
-    .select(".domain")
-    .select(function() {
-        return this.parentNode.appendChild(this.cloneNode(true));
-    })    
-    .attr("class", "halo");
+        .attr("class", "halo");
 
-sliderContainer.call(xAxis)
+    sliderContainer.call(xAxis)
 
-var slider = sliderContainer.append("g")
-    .attr("class", "g-slider")
-    .call(brush);
+    var slider = sliderContainer.append("g")
+        .attr("class", "g-slider")
+        .call(brush);
 
-slider.selectAll(".extent, .resize").remove();
+    slider.selectAll(".extent, .resize").remove();
 
-slider.select(".background")
-    .attr("height", sliderHeight);
+    slider.select(".background")
+        .attr("height", sliderHeight);
 
-var handle = slider.append("circle")
-    .attr("class", "handle")
-    .attr("transform", "translate(0," + sliderHeight / 2 + ")")
-    .attr("r", 9);
+    var handle = slider.append("circle")
+        .attr("class", "handle")
+        .attr("transform", "translate(0," + sliderHeight / 2 + ")")
+        .attr("r", 9);
 
 
 
 
-reset();
+    reset();
 
-function reset() {
+    function reset() {
 
-    var bounds = path.bounds(collection), //Use US for the projection bounds
-        topLeft = bounds[0],
-        bottomRight = bounds[1];
+        var bounds = path.bounds(collection), //Use US for the projection bounds
+            topLeft = bounds[0],
+            bottomRight = bounds[1];
 
-    svg.attr("width", bottomRight[0] - topLeft[0])
-        .attr("height", bottomRight[1] - topLeft[1])
-        .style("left", topLeft[0] + "px")
-        .style("top", topLeft[1] + "px");
+        svg.attr("width", bottomRight[0] - topLeft[0])
+            .attr("height", bottomRight[1] - topLeft[1])
+            .style("left", topLeft[0] + "px")
+            .style("top", topLeft[1] + "px");
 
-    g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+        g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
 
-    feature.attr("d", path)
-        .style("fill", function(d){
-        // console.log(d)
-        if (d.properties.province == "British Columbia") {
-            return "none"
-        } else { 
-            return "#ddd";
-        }
-        })
+        feature.attr("d", path)
+            .style("fill", function(d) {
+                // console.log(d)
+                if (d.properties.province == "British Columbia") {
+                    return "none"
+                } else {
+                    return "#ddd";
+                }
+            });
+
+
         feature1.attr("d", path)
-        .style("fill", "#ddd");
+            .style("fill", "#ddd");
         ocean.attr("d", path)
-        .style("fill", "#a6cef5");
-
-}
-
-function projectPoint(x, y) {
-    var point = map.latLngToLayerPoint(new L.LatLng(y, x));
-    this.stream.point(point.x, point.y);
-};
+            .style("fill", "#a6cef5");
 
 
-var wmsL;
-function drawMap(date){
-    wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
-        layers: 'tmax_monClim_PRISM_historical_run1_197101-200012/tmax',
-        format: 'image/png',
-        maxZoom: 14,
-        minZoom: 0,
-        transparent: 'true',
-        month: date,
-        time: '1985-'+date+'-15',
-        styles: 'boxfill/rainbow',
-        logscale: false,
-        numcolorbands: 254,
-        version: '1.1.1',
-        continuousWorld: true
-    });
+
+    }
+
+    function projectPoint(x, y) {
+        var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+        this.stream.point(point.x, point.y);
+    };
+
+
+    var wmsL;
+
+    function drawMap(date) {
+
+
+        // var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:band1&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
+        //     imageBounds = [[60.364901, -114.917969], [46.851760, -142.734375]];
+
+        // L.imageOverlay(imageUrl, imageBounds).addTo(map);
+
+
+        wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
+            layers: 'tmax_monClim_PRISM_historical_run1_197101-200012/tmax',
+            format: 'image/png',
+            maxZoom: 14,
+            minZoom: 0,
+            transparent: 'true',
+            month: date,
+            time: '1985-' + date + '-15',
+            styles: 'boxfill/rainbow',
+            logscale: false,
+            numcolorbands: 254,
+            version: '1.1.1',
+            continuousWorld: true
+        });
         console.log(wmsL)
 
-    wmsL.addTo(map)
+        wmsL.addTo(map)
+        // var mywms = L.tileLayer.wms("http://pbrown.ca:8080/geoserver/cite/wms", {
+        // layers: 'cite:band1',
+        //     format: 'image/png',
+        //     transparent: true,
+        //     version: '1.1.0',
+        //     attribution: "myattribution"
+        // });
+        // mywms.addTo(map);
+    };
 
+    function brushed() {
 
-}
+        var value = brush.extent()[0];
 
-function brushed() {
+        if (d3.event.sourceEvent) {
 
-    var value = brush.extent()[0];
+            value = Math.round(x.invert(d3.mouse(this)[0]));
 
-    if (d3.event.sourceEvent) {
+            brush.extent([value, value]);
+        }
+        handle.attr("cx", x(value));
+        var brushDate = brushToMonth(value - 1);
 
-        value = Math.round(x.invert(d3.mouse(this)[0]));
+        current.month = brushDate;
+        map.removeLayer(wmsL) // remove player to prevent them from piling up.
+        drawMap(brushDate)
 
-        brush.extent([value, value]);
     }
-    handle.attr("cx", x(value));
-    var brushDate = brushToMonth(value -1);
-
-    current.month = brushDate;
-    map.removeLayer(wmsL) // remove player to prevent them from piling up.
-    drawMap(brushDate)
-
-}
 
 
 
@@ -422,18 +454,24 @@ var counter = 0;
 
 
 var chartData = [];
-  
-for (i = 1; i <0; i++) { 
-      chartData.push({
-        x:'1985-'+i+'-15',
-        y: i})
-  }
+
+for (i = 1; i < 0; i++) {
+    chartData.push({
+        x: '1985-' + i + '-15',
+        y: i
+    })
+}
 
 // make graph here (move later)
 
-var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 760 /2 - margin.left - margin.right,
-    height = 250 - margin.top - margin.bottom;
+var margin = {
+        top: 20,
+        right: 20,
+        bottom: 30,
+        left: 50
+    },
+    widthG = 760 / 2 - margin.left - margin.right,
+    heightG = 250 - margin.top - margin.bottom;
 
 var parseDate = d3.time.format("%Y-%m-%d").parse;
 
@@ -442,10 +480,10 @@ chartData.forEach(function(d) {
 });
 
 var x = d3.time.scale()
-    .range([0, width]);
+    .range([0, widthG]);
 
 var y = d3.scale.linear()
-    .range([height, 0]);
+    .range([heightG, 0]);
 
 var xAxis = d3.svg.axis()
     .scale(x)
@@ -457,19 +495,24 @@ var yAxis = d3.svg.axis()
     .orient("left");
 
 var line = d3.svg.line()
-.interpolate("basis")
-    .x(function(d) { return x(d.x); })
+    .interpolate("basis")
+    .x(function(d) {
+        return x(d.x);
+    })
     .y(function(d) {
-        return y(d.y); });
+        return y(d.y);
+    });
 
 var svg = d3.select("#chart").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
+    .attr("width", widthG + margin.left + margin.right)
+    .attr("height", heightG + margin.top + margin.bottom)
+    .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-x.domain(d3.extent(chartData, function(d) {return d.x;}));
+x.domain(d3.extent(chartData, function(d) {
+    return d.x;
+}));
 y.domain([-20, 30]);
 
 svg.append("g") //x axis group
@@ -496,15 +539,13 @@ svg.selectAll("circle")
     .enter()
     .append("circle")
     .attr("r", 3.5)
-    .attr("cx", function(d) { return x(d.x); })
-    .attr("cy", function(d) { return y(d.y); })
+    .attr("cx", function(d) {
+        return x(d.x);
+    })
+    .attr("cy", function(d) {
+        return y(d.y);
+    })
     .style("fill", "rgb(214,39,40)");
-
-
-
-
-
-
 </script>
 
 
