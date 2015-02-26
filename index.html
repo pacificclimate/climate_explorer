@@ -82,7 +82,7 @@ fill-opacity: .7;
 #slider {
     position: absolute;
     left: 20px;
-    top: 360px;
+    top: 330px;
     font-size: 0.8em;
 }
 
@@ -203,11 +203,17 @@ function ready(error, canada, us, ocean) {
         maxValue = 12,
         moving;
 
+    var colors = d3.scale.quantize()
+        .range(["rgb(69,117,180)", "rgb(116,173,209)", "rgb(171,217,233)", "rgb(224,243,248)", "rgb(255,255,178)", "rgb(254,217,118)", "rgb(254,178,76)", "rgb(253,141,60)", "rgb(252,78,42)", "rgb(227,26,28)", "rgb(177,0,38)"]);
+
+    var legend_labels = ["-20", "-15", "-10", "-5", "0", "5", "10", "15", "20", "25", "30"]
+
+
     var sliderContainer = d3.select("#slider").append("svg")
         .attr("width", sliderWidth + margin.left + margin.right + 10)
         .attr("height", sliderHeight + margin.top + margin.bottom)
         .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + margin.left + "," + (margin.top)+ ")");
 
     var x = d3.scale.linear()
         .domain([1, 12])
@@ -252,7 +258,7 @@ function ready(error, canada, us, ocean) {
         g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
 
-
+    
 
     var merged = canada;
     var collection = us;
@@ -338,7 +344,10 @@ function ready(error, canada, us, ocean) {
         .attr("r", 9);
 
 
-
+    var legend = g.selectAll('g.legendEntry')
+            .data(colors.range().reverse())
+            .enter()
+            .append("g");
 
     reset();
 
@@ -385,8 +394,8 @@ function ready(error, canada, us, ocean) {
         relief;
 
     function drawMap(date) {
-        console.log(date)
-        // use custom tiles
+
+        // use custom tiles. Comment out to use PCIC tile
         var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:relief'+date+'&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
             imageBounds = [[61.5, -113.05], [47.1, -146]];
 
@@ -407,7 +416,7 @@ function ready(error, canada, us, ocean) {
             numcolorbands: 254,
             version: '1.1.1',
             continuousWorld: true,
-            opacity: 0
+            opacity: 0 // change to 1 to make visible
         });
         console.log(wmsL)
 
@@ -421,6 +430,35 @@ function ready(error, canada, us, ocean) {
         // });
         // mywms.addTo(map);
     };
+
+    // legend 
+    var ls_w = 20;
+    legend
+        .append("rect")
+        .attr("y", 450)
+        .attr("x", function(d, i) {
+            console.log(d)
+            return (width - 400) - (i * ls_w) - 2*ls_w;
+        })
+        .attr("width", ls_w)
+        .attr("height", 10)
+        .style("fill", function(d) {
+            return d;
+        });
+
+    legend.append("text")
+        .attr("y", 475)
+        .attr("x", function(d, i) {
+            return (width - 400) - (i * ls_w) - ls_w - 10;
+        })
+        .attr("class", "leg")
+        .text(function(d,i) {
+
+            if (i === 0)
+                return legend_labels[colors.range().length - i-1] + "\xB0 C";
+            else
+                return legend_labels[colors.range().length - i-1];
+        });
 
     function brushed() {
 
@@ -446,7 +484,6 @@ function ready(error, canada, us, ocean) {
 
 }
 
-// testing stuff out
 
 //setup graph but don't show yet.
 
@@ -517,7 +554,7 @@ y.domain([-20, 30]);
 
 svg.append("g") //x axis group
     .attr("class", "x axisC")
-    .attr("transform", "translate(0," + height + ")")
+    .attr("transform", "translate(0," + heightG + ")")
     .call(xAxis);
 
 // svg.append("g")
