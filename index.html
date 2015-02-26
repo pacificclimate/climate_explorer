@@ -10,7 +10,7 @@
     #map {
         width: 760px;
         height: 500px;
-        background: none;
+        background: #fff;
     }
     svg {
         position: relative;
@@ -177,10 +177,6 @@ map = new L.Map('map', {
 
 map.setView([54, -122.9364], 1);
 
-       // var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:band1&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
-       //      imageBounds = [[61.5, -113.05], [47.1, -146]];
-
-       //  L.imageOverlay(imageUrl, imageBounds).addTo(map);
 
 queue()
     .defer(d3.json, "canada.json")
@@ -385,17 +381,19 @@ function ready(error, canada, us, ocean) {
     };
 
 
-    var wmsL;
+    var wmsL,
+        relief;
 
     function drawMap(date) {
+        console.log(date)
+        // use custom tiles
+        var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:relief'+date+'&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
+            imageBounds = [[61.5, -113.05], [47.1, -146]];
 
+        relief = L.imageOverlay(imageUrl, imageBounds)
+        relief.addTo(map).bringToBack();
 
-        // var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:band1&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
-        //     imageBounds = [[60.364901, -114.917969], [46.851760, -142.734375]];
-
-        // L.imageOverlay(imageUrl, imageBounds).addTo(map);
-
-
+  
         wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
             layers: 'tmax_monClim_PRISM_historical_run1_197101-200012/tmax',
             format: 'image/png',
@@ -408,7 +406,8 @@ function ready(error, canada, us, ocean) {
             logscale: false,
             numcolorbands: 254,
             version: '1.1.1',
-            continuousWorld: true
+            continuousWorld: true,
+            opacity: 0
         });
         console.log(wmsL)
 
@@ -438,6 +437,7 @@ function ready(error, canada, us, ocean) {
 
         current.month = brushDate;
         map.removeLayer(wmsL) // remove player to prevent them from piling up.
+        map.removeLayer(relief)
         drawMap(brushDate)
 
     }

@@ -52,10 +52,10 @@ newUs.json: build/us.json
 
 
 
-build/tempCol.tiff: build/jan.tif
+build/tempCol.tiff: build/dec.tif
 	gdaldem \
 	color-relief \
-	  build/jan.tif \
+	  build/dec.tif \
 	  color_temp.txt \
 	  build/tempCol.tiff
 
@@ -67,17 +67,18 @@ build/final.tiff: build/tempCol.tiff
 	  build/tempCol.tiff \
 	  build/final.tiff
 
-build/relief.tiff: build/final.tiff
+build/relief12.tiff: build/final.tiff
 	gdalwarp \
 	  -r lanczos \
 	  -ts 960 600 \
 	  -t_srs "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs" \
+	  -wo INIT_DEST=255 \
 	  build/final.tiff \
-	  build/relief.tiff
+	  build/relief12.tiff
 
 
-band1.png: build/relief.tiff
-	gdal_translate -of PNG build/relief.tiff band1.png
+band2.png: build/relief.tiff
+	gdal_translate -of PNG build/relief.tiff band2.png
 
 # set correct projection on 'raw' tif, then add to geoserver
 
