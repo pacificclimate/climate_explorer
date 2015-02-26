@@ -167,15 +167,16 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .duration(1000)
                 .call(yAxis);
 
-
-        };
-
-        L.popup({
+            L.popup({
                 maxWidth: 800
             })
             .setLatLng(latlng)
-            .setContent(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML)
-            .openOn(map);
+            .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML).toFixed(2)+" \xB0C")
+            .openOn(map);    
+
+        };
+
+        
         }
 
 });
