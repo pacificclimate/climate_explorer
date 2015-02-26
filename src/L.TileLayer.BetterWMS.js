@@ -168,8 +168,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .call(yAxis);
 
 
-
-        }
+        };
 
         L.popup({
                 maxWidth: 800
@@ -178,7 +177,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
             .setContent(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML)
             .openOn(map);
         }
-    
+
 });
 
 L.tileLayer.betterWms = function(url, options) {
