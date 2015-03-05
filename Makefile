@@ -51,12 +51,37 @@ newUs.json: build/us.json
 
 
 
+# build/tempCol.tiff: build/dec_min.tif
+# 	gdaldem \
+# 	color-relief \
+# 	  build/dec_min.tif \
+# 	  color_temp.txt \
+# 	  build/tempCol.tiff
 
-build/tempCol.tiff: build/dec.tif
+# build/final.tiff: build/tempCol.tiff
+# 	gdalwarp \
+# 	  -r lanczos \
+# 	  -ts 960 0 \
+# 	  -t_srs EPSG:4326 \
+# 	  build/tempCol.tiff \
+# 	  build/final.tiff
+
+# build/tmin12.tiff: build/final.tiff
+# 	gdalwarp \
+# 	  -r lanczos \
+# 	  -ts 960 600 \
+# 	  -t_srs "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs" \
+# 	  -wo INIT_DEST=255 \
+# 	  build/final.tiff \
+# 	  build/tmin12.tiff
+
+
+# precipitation
+build/tempCol.tiff: build/dec_pr.tif
 	gdaldem \
 	color-relief \
-	  build/dec.tif \
-	  color_temp.txt \
+	  build/dec_pr.tif \
+	  colour_rain.txt \
 	  build/tempCol.tiff
 
 build/final.tiff: build/tempCol.tiff
@@ -67,18 +92,18 @@ build/final.tiff: build/tempCol.tiff
 	  build/tempCol.tiff \
 	  build/final.tiff
 
-build/relief12.tiff: build/final.tiff
+build/pr1.tiff: build/final.tiff
 	gdalwarp \
 	  -r lanczos \
 	  -ts 960 600 \
 	  -t_srs "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs" \
 	  -wo INIT_DEST=255 \
 	  build/final.tiff \
-	  build/relief12.tiff
+	  build/pr1.tiff
 
 
-band2.png: build/relief.tiff
-	gdal_translate -of PNG build/relief.tiff band2.png
+# band2.png: build/relief.tiff
+# 	gdal_translate -of PNG build/relief.tiff band2.png
 
 # set correct projection on 'raw' tif, then add to geoserver
 

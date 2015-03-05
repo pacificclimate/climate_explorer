@@ -22,25 +22,14 @@
         stroke-width: 1px;
     }
 
-/*.ocean {
-fill: blue;
-fill-opacity: .3;
-}  */
+
 
 .us{
     fill: #bdbdbd;
     stroke: #fff;
     stroke-width: 1px;
 }
-/*  path:hover {
-fill: brown;
-fill-opacity: .7;
-}
 
-.us:hover {
-fill: green;
-fill-opacity: .7;
-}*/
 
 .axis .domain {
     fill: none;
@@ -115,6 +104,7 @@ fill-opacity: .7;
 
 }
 
+
 </style>
 
 
@@ -126,13 +116,18 @@ fill-opacity: .7;
 
 <p id="map">
 
-
-
 <div id="chart_container">
     <div id="y_axis"></div>
     <div id="chart"></div>
 </div>
+
 <div id="slider"></div>
+
+<select class="climate_var">
+    <option value="Tmax">Maximum Temperature </option>
+    <option value="Tmin">Minimum Temperature </option>
+    <option value="pr">Precipitation </option>
+</select>
 
 <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/proj4js-compressed.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -220,7 +215,7 @@ function ready(error, canada, us, ocean) {
         .range([0, sliderWidth])
         .clamp(true);
 
-    var brushToMonth = d3.scale.threshold()
+    var brushToMonth = d3.scale.quantile()
         .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
         .range([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
 
@@ -258,16 +253,12 @@ function ready(error, canada, us, ocean) {
         g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
 
-    
-
-    var merged = canada;
-    var collection = us;
 
     var pacific = topojson.feature(ocean, ocean.objects.ocean);
 
 
     // first variable is used to center and scale map the viewport
-    var bTopo = topojson.feature(merged, merged.objects.canada),
+    var bTopo = topojson.feature(canada, canada.objects.canada),
         topo = bTopo.features;
     feature = topo;
 
@@ -290,24 +281,21 @@ function ready(error, canada, us, ocean) {
         .attr("id", "land");
 
 
-
     map.on("viewreset", reset);
 
 
-
     var feature1 = g.selectAll("path1")
-        .data(collection.features)
+        .data(us.features)
         .enter().append("path")
         .attr("class", "us");
 
-    var ocean = g.selectAll("path2")
+    var ocean = g.selectAll("path2") // only using to mask tiles that spill over boarder. Could clip tiles instead...
         .data(pacific.features)
         .enter().append("path")
         .attr("class", "ocean");
 
 
-
-    drawMap(1)
+    drawMap(1) //initialize with Jan for now
 
     sliderContainer.append("g")
         .attr("class", "x axis")
@@ -347,13 +335,14 @@ function ready(error, canada, us, ocean) {
     var legend = g.selectAll('g.legendEntry')
             .data(colors.range().reverse())
             .enter()
-            .append("g");
+            .append("g")
+            .attr("class",'legend');
 
     reset();
 
     function reset() {
 
-        var bounds = path.bounds(collection), //Use US for the projection bounds
+        var bounds = path.bounds(us), //Use US for the projection bounds
             topLeft = bounds[0],
             bottomRight = bounds[1];
 
@@ -393,10 +382,16 @@ function ready(error, canada, us, ocean) {
     var wmsL,
         relief;
 
+    // $(document).ready(function(){
+    //     $('.climate_var').on('change',function(){
+    //         climate_var = $('.climate_var').val();
+    //         document.getElementById("title").innerHTML = $('.climate_var').val();
+    //         console.log(climate_var)
+
     function drawMap(date) {
 
         // use custom tiles. Comment out to use PCIC tile
-        var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:relief'+date+'&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
+        var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:tmax'+date+'&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
             imageBounds = [[61.5, -113.05], [47.1, -146]];
 
         relief = L.imageOverlay(imageUrl, imageBounds)
@@ -438,7 +433,7 @@ function ready(error, canada, us, ocean) {
         .attr("y", 450)
         .attr("x", function(d, i) {
             // console.log(d)
-            return (width - 400) - (i * ls_w) - 2*ls_w;
+            return (width ) - (i * ls_w) - 2*ls_w;
         })
         .attr("width", ls_w)
         .attr("height", 10)
@@ -449,7 +444,7 @@ function ready(error, canada, us, ocean) {
     legend.append("text")
         .attr("y", 475)
         .attr("x", function(d, i) {
-            return (width - 400) - (i * ls_w) - ls_w - 10;
+            return (width) - (i * ls_w) - ls_w - 10;
         })
         .attr("class", "leg")
         .text(function(d,i) {
@@ -479,8 +474,6 @@ function ready(error, canada, us, ocean) {
         drawMap(brushDate)
 
     }
-
-
 
 }
 
