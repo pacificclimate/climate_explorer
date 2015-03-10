@@ -92,14 +92,14 @@ build/final.tiff: build/tempCol.tiff
 	  build/tempCol.tiff \
 	  build/final.tiff
 
-build/pr1.tiff: build/final.tiff
+build/pr12.tiff: build/final.tiff
 	gdalwarp \
 	  -r lanczos \
 	  -ts 960 600 \
 	  -t_srs "+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs" \
 	  -wo INIT_DEST=255 \
 	  build/final.tiff \
-	  build/pr1.tiff
+	  build/pr12.tiff
 
 
 # band2.png: build/relief.tiff
