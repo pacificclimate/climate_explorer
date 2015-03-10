@@ -104,7 +104,9 @@
 
 }
 
-
+#legMain {
+    font:12px "Helvetica Neue", Helvetica;
+}
 </style>
 
 
@@ -122,6 +124,8 @@
 </div>
 
 <div id="slider"></div>
+
+<div id="legMain"></div>
 
 <select class="climate_var">
     <option value="tmax">Maximum Temperature </option>
@@ -164,11 +168,6 @@ map = new L.Map('map', {
     maxBounds: bounds
 });
 
-// precip layer
-// 'pr_monClim_PRISM_historical_run1_197101-200012/pr',
-// styles: 'boxfill/occam_inv',
-// logscale: false,
-
 
 map.setView([54, -122.9364], 1);
 
@@ -208,7 +207,7 @@ function ready(error, canada, us, ocean) {
         .attr("width", sliderWidth + margin.left + margin.right + 10)
         .attr("height", sliderHeight + margin.top + margin.bottom)
         .append("g")
-        .attr("transform", "translate(" + margin.left + "," + (margin.top)+ ")");
+        .attr("transform", "translate(" + margin.left + "," + (margin.top) + ")");
 
     var x = d3.scale.linear()
         .domain([1, 12])
@@ -294,8 +293,8 @@ function ready(error, canada, us, ocean) {
         .enter().append("path")
         .attr("class", "ocean");
 
-    console.log(current.month)
-    drawMap(current.month,'tmax') //initialize with Jan and tmax for now
+    // console.log(current.month)
+    drawMap(current.month, 'tmax') //initialize with Jan and tmax for now
 
     sliderContainer.append("g")
         .attr("class", "x axis")
@@ -331,12 +330,13 @@ function ready(error, canada, us, ocean) {
         .attr("transform", "translate(0," + sliderHeight / 2 + ")")
         .attr("r", 9);
 
+    var svgLeg = d3.select("#legMain").append("svg").attr("width",600)
 
-    var legend = g.selectAll('g.legendEntry')
-            .data(colors.range().reverse())
-            .enter()
-            .append("g")
-            .attr("class",'legend');
+    var legend = svgLeg.selectAll('g.legendEntry')
+        .data(colors.range().reverse())
+        .enter()
+        .append("g")
+        .attr("class", 'legend');
 
     reset();
 
@@ -386,34 +386,37 @@ function ready(error, canada, us, ocean) {
 
     // drawMap(current.month,climate_var)
 
-        function drawMap(date,climate_var) {
+    function drawMap(date, climate_var) {
 
-            // use custom tiles. Comment out to use PCIC tile
-            var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:'+climate_var+date+'&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
-                imageBounds = [[61.5, -113.05], [47.1, -146]];
+        // use custom tiles. Comment out to use PCIC tile
+        var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:' + climate_var + date + '&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
+            imageBounds = [
+                [61.5, -113.05],
+                [47.1, -146]
+            ];
 
-            relief = L.imageOverlay(imageUrl, imageBounds)
-            relief.addTo(map).bringToBack();
+        relief = L.imageOverlay(imageUrl, imageBounds)
+        relief.addTo(map).bringToBack();
 
-      
-            wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
-                layers: climate_var+'_monClim_PRISM_historical_run1_197101-200012/'+climate_var,
-                format: 'image/png',
-                maxZoom: 14,
-                minZoom: 0,
-                transparent: 'true',
-                month: date,
-                time: '1985-' + date + '-15',
-                styles: 'boxfill/rainbow',
-                logscale: false,
-                numcolorbands: 254,
-                version: '1.1.1',
-                continuousWorld: true,
-                opacity: 0 // change to 1 to make visible
-            });
-            console.log(wmsL)
 
-            wmsL.addTo(map)
+        wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
+            layers: climate_var + '_monClim_PRISM_historical_run1_197101-200012/' + climate_var,
+            format: 'image/png',
+            maxZoom: 14,
+            minZoom: 0,
+            transparent: 'true',
+            month: date,
+            time: '1985-' + date + '-15',
+            styles: 'boxfill/rainbow',
+            logscale: false,
+            numcolorbands: 254,
+            version: '1.1.1',
+            continuousWorld: true,
+            opacity: 0 // change to 1 to make visible
+        });
+        console.log(wmsL)
+
+        wmsL.addTo(map)
             // var mywms = L.tileLayer.wms("http://pbrown.ca:8080/geoserver/cite/wms", {
             // layers: 'cite:band1',
             //     format: 'image/png',
@@ -422,51 +425,50 @@ function ready(error, canada, us, ocean) {
             //     attribution: "myattribution"
             // });
             // mywms.addTo(map);
-        };
+    };
 
-            // trace selection
-    $(document).ready(function(){
-        $('.climate_var').on('change',function(){
+    // trace selection
+    $(document).ready(function() {
+        $('.climate_var').on('change', function() {
             climate_var = $('.climate_var').val();
             // document.getElementById("title").innerHTML = $('.climate_var').val();
             console.log(current.month)
             map.removeLayer(wmsL) // remove player to prevent them from piling up.
             map.removeLayer(relief)
-            drawMap(current.month,climate_var)
+            drawMap(current.month, climate_var)
 
-        }); 
-    
-    }); 
+        });
+
+    });
 
 
-        // legend 
-        var ls_w = 20;
-        legend
-            .append("rect")
-            .attr("y", 450)
-            .attr("x", function(d, i) {
-                // console.log(d)
-                return (width ) - (i * ls_w) - 2*ls_w;
-            })
-            .attr("width", ls_w)
-            .attr("height", 10)
-            .style("fill", function(d) {
-                return d;
-            });
+    // legend 
+    var ls_w = 26;
+    legend
+        .append("rect")
+        .attr("y", 25)
+        .attr("x", function(d, i) {
+            // console.log(d)
+            return (320) - (i * ls_w) - 2 * ls_w;
+        })
+        .attr("width", ls_w)
+        .attr("height", 10)
+        .style("fill", function(d) {
+            return d;
+        });
 
-        legend.append("text")
-            .attr("y", 475)
-            .attr("x", function(d, i) {
-                return (width) - (i * ls_w) - ls_w - 10;
-            })
-            .attr("class", "leg")
-            .text(function(d,i) {
+    legend.append("text")
+        .attr("y", 50)
+        .attr("x", function(d, i) {
+            return (320) - (i * ls_w) - ls_w - 10;
+        })
+        .text(function(d, i) {
 
-                if (i === 0)
-                    return legend_labels[colors.range().length - i-1] + "\xB0 C";
-                else
-                    return legend_labels[colors.range().length - i-1];
-            });
+            if (i === 0)
+                return legend_labels[colors.range().length - i - 1] + "\xB0 C";
+            else
+                return legend_labels[colors.range().length - i - 1];
+        });
 
 
 
