@@ -1,82 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>OpenLayers & D3</title>
-  <script src="http://openlayers.org/api/OpenLayers.js"></script>
-  <script src="http://d3js.org/d3.v3.min.js"></script>
-  <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/proj4js-compressed.js"></script>
-<style>
-body {
-  margin: 0em 0em;
-}
-
-#map {
-  width: 960px;
-  height: 500px;
-}
-
-path {
-  fill: #000;
-  fill-opacity: .2;
-  stroke: #fff;
-  stroke-width: 1.5px;
-}
-
-path:hover {
-  fill: brown;
-  fill-opacity: .7;
-}
-</style>
-</head>
-
-<body>
-<div id="map"></div>
-<script>
-
-// Create an OpenLayers map using <div> with id='map' (set width & height with CSS)
-// OpenLayers uses lon/lat coordinates for its default projection, EPSG:4326. 
-// For EPSG:900913, OpenLayers uses x/y coordinates in meters.
-function getBC3005Bounds() {
-    return new OpenLayers.Bounds(-236114, 41654.75, 2204236, 1947346.25);
-}
-
-
-function getProjection(a) {
-    return new OpenLayers.Projection("EPSG:" + a);
-}
-
-function BC3005_map_options() {
-    bounds = getBC3005Bounds();
-    var a = {
-        restrictedExtent: bounds,
-        displayProjection: getProjection(4326),
-        projection: getProjection(3005),
-        units: 'Meter'
-    };
-    return a;
-}
-
-function getBC3005OsmBaseLayer(a, b, c) {
-    return new OpenLayers.Layer.WMS(b, a, {
-        layers: c
-    }, {
-        projection: getProjection(3005),
-        units: 'Meter',
-        maxExtent: new OpenLayers.Bounds(-1000000, -1000000, 3000000, 3000000),
-        maxResolution: 7812.5,
-        numZoomLevels: 12,
-    });
-}
-
-options = BC3005_map_options();
-var tcUrls = new Array();
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+  <head>
+    <title>High-Resolution PRISM Climatology</title>
+      <link type="text/css" href="http://tools.pacificclimate.org/dataportal/css/jquery-ui-1.10.2.custom.css" rel="stylesheet">
+      <link type="text/css" href="http://tools.pacificclimate.org/dataportal/css/reset.css" rel="stylesheet">
+      <link type="text/css" href="http://tools.pacificclimate.org/dataportal/css/main.css" rel="stylesheet">
+      <link type="text/css" href="http://tools.pacificclimate.org/dataportal/css/map.css" rel="stylesheet">
+      <link type="text/css" href="http://tools.pacificclimate.org/dataportal/css/header.css" rel="stylesheet">
+      <link type="text/css" href="http://tools.pacificclimate.org/dataportal/css/footer.css" rel="stylesheet">
+      <link type="text/css" href="http://tools.pacificclimate.org/dataportal/css/login.css" rel="stylesheet">
+      <link type="text/css" href="http://tools.pacificclimate.org/dataportal/css/controls.css" rel="stylesheet">
+      <link type="text/css" href="http://tools.pacificclimate.org/dataportal/css/menu.css" rel="stylesheet">
+    <script type="text/javascript">
+    var tcUrls = new Array();
       tcUrls.push('http://a.tiles.pacificclimate.org/tilecache/tilecache.py');
       tcUrls.push('http://b.tiles.pacificclimate.org/tilecache/tilecache.py');
       tcUrls.push('http://c.tiles.pacificclimate.org/tilecache/tilecache.py');
-var ncwmsUrls = new Array();
+    var ncwmsUrls = new Array();
       ncwmsUrls.push('http://tools.pacificclimate.org/ncWMS-PCIC/wms');
-
-var pdp = {
+    (function( global, undefined) {
+      "use strict"
+      var pdp = {
         VERSION: '0.1',
         app_root: 'http://tools.pacificclimate.org/dataportal',
         gs_url: 'http://tools.pacificclimate.org/geoserver/',
@@ -84,113 +28,52 @@ var pdp = {
         tilecache_url: tcUrls,
         ensemble_name: 'bc_prism'
       };
-
-var map = new OpenLayers.Map('map', options);
-// var wms = new OpenLayers.Layer.WMS( "OpenLayers WMS",
-//               "http://vmap0.tiles.osgeo.org/wms/vmap0", {layers:'basic'} );
-
-map.addLayer(getBC3005OsmBaseLayer(pdp.tilecache_url, 'BC OpenStreeMap', 'bc_osm'));
-
-map.setCenter(new OpenLayers.LonLat(-100.9, 55.8).transform("EPSG:4326", "EPSG:3005"), 1);
-
-
-
-
-var getNCWMSLayerCapabilities = function(a) {
-    var b = {
-        REQUEST: "GetCapabilities",
-        SERVICE: "WMS",
-        VERSION: "1.1.1",
-        DATASET: a.params.LAYERS.split("/")[0]
-    };
-    $.ajax({
-        url: a.url,
-        data: b
-    }).fail(handle_ie8_xml).always(function(a, b, c) {
-        window.ncwmsCapabilities = $(c.responseXML);
-    });
-};
-
-defaults = {
-        dataset: "pr_monClim_PRISM_historical_run1_197101-200012",
-        variable: "pr"
-    };
-
-params = {
-        layers: defaults.dataset + "/" + defaults.variable,
-        transparent: 'true',
-        time: '1985-06-30',
-        styles: 'boxfill/occam_inv',
-        logscale: true,
-        numcolorbands: 254,
-        version: '1.1.1',
-        srs: 'EPSG:3005'
-    };
-
-
-
-    datalayerName = "Climate raster";
-    ncwms = new OpenLayers.Layer.WMS(datalayerName, pdp.ncwms_url, params, {
-        maxExtent: getBC3005Bounds(),
-        buffer: 1,
-        ratio: 1.5,
-        opacity: 0.7,
-        transitionEffect: null,
-        tileSize: new OpenLayers.Size(512, 512)
-    });
-map.addLayer(ncwms);
-
-
-
-
-// d3.json("us-states.json", function(err, collection) {
-//     var bounds = d3.geo.bounds(collection),
-//         path = d3.geo.path().projection(project), // create a d3.geo.path that converts GeoJSON to SVG
-//         vector = new OpenLayers.Layer.Vector( "states" ); // create a vector layer
-
-//     // Use D3 to add the states after the vector layer has been added to the map
-//     vector.afterAdd = function() {
-//         var div = d3.select("#"+vector.div.id);
-//         div.selectAll("svg").remove();  // Prepare OpenLayers vector div to be the container for D3
-
-//         var svg = div.append("svg"),
-//             g = svg.append("g");
-
-//         var states = g.selectAll("path")
-//                 .data(collection.features)
-//               .enter().append("path");
-
-//         reset();
-
-//         // Reposition the SVG to cover the features
-//         function reset() {
-//             var bottomLeft = project(bounds[0]),
-//                 topRight = project(bounds[1]);
-
-//             svg .attr("width", topRight[0] - bottomLeft[0])
-//                 .attr("height",bottomLeft[1] - topRight[1])
-//                 .style("margin-left", bottomLeft[0] + "px")
-//                 .style("margin-top", topRight[1] + "px");
-
-//             g   .attr("transform", "translate(" + -bottomLeft[0] + "," + -topRight[1] + ")")
-            
-//             states.attr("d", path);
-//         };
-//         map.events.register("moveend", map, reset);
-//     };
-//     // Add the vector layer to the map
-//     map.addLayer(vector);
-
-//    // Use OpenLayers to implement a custom D3 geographic projection.
-//    // Converts lon/lat to viewport coordinates (D3 uses 2-element arrays).
-//    function project(x) {
-//        var point = map.getViewPortPxFromLonLat( new OpenLayers.LonLat(x[0], x[1])
-//                                                     .transform("EPSG:4326", "EPSG:3005")
-//        );
-//        return [ point.x, point.y ];
-//    }
-// });
-
-</script>
-</body>
+      global.pdp = pdp
+    }(typeof window === 'undefined' ? this : window));
+    </script>
+      <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/ie8.js"></script>
+      <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/jquery-1.10.2.js"></script>
+      <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/jquery-ui-1.10.2.custom.js"></script>
+      <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/zebra.js"></script>
+      <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/OL/OpenLayers-2.13.1.js"></script>
+      <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/proj4js-compressed.js"></script>
+      <script type="text/javascript" src="http://tools.pacificclimate.org/dataportal/js/multiaccordion.js"></script>
+      <script type="text/javascript" src="pdp.js"></script>
+      <script type="text/javascript" src="bc_prism.js"></script>
+  </head>
+  <body>
+    <div id="wrapper">
+    <div id="header">
+      <a href="http://pacificclimate.org"><img src="http://tools.pacificclimate.org/dataportal/images/banner.png" alt="PCIC Logo"></a>
+      <h1>High-Resolution PRISM Climatology</h1>
+      <div style="clear"></div>
+      <div id="topnav">
+      <!-- TODO: populate from js -->
+        <ul class="menu">
+          <li><a href="http://pacificclimate.org">PCIC Home</a></li>
+          <li><a href="http://tools.pacificclimate.org/dataportal/docs/" target="_blank">User Docs</a></li>
+        </ul>
+      <div id="login-div"></div>
+      </div><!-- /topnav -->
+    </div><!-- /header -->
+    <div id="main">
+      <div id="map-wrapper">
+        <div class="relative">
+          <div id="pdp-map"></div>
+          <div id="map-title"></div>
+          <div id="location"></div>
+    <div id="pdpColorbar"></div>
+  </div>
+      </div>
+      <!-- <div id="pdp-controls"></div> -->
+    </div><!-- /main -->
+    <div id="footer">
+      <!-- TODO: populate with js -->
+        <ul class="menu">
+          <li>PCIC Data Portal version 2.2.4</li>
+          <li><a href="http://www.pacificclimate.org/terms-of-use/">Terms of Use</a></li>
+        </ul>
+    </div><!-- /footer -->
+    </div><!-- /wrapper -->
+  </body>
 </html>

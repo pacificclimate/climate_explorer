@@ -92,6 +92,11 @@
 .x.axisC path {
   display: none;
 }
+
+.colourY path {
+  display: none;
+}
+
 #chart {
   font: 10px sans-serif;
   
@@ -106,7 +111,13 @@
 
 #legMain {
     font:12px "Helvetica Neue", Helvetica;
+    position: absolute;
+    left:720px;
+    top:470px;
+
 }
+
+
 </style>
 
 
@@ -121,7 +132,7 @@
     <option value="pr">Precipitation </option>
 </select>
 <p id="map">
-
+<div id="pdpColorbar"></div>
 <div id="chart_container">
     <div id="y_axis"></div>
     <div id="chart"></div>
@@ -139,6 +150,9 @@
 <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
 <script src="http://d3js.org/queue.v1.min.js"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.js"></script>
+      <script type="text/javascript" src="pdp.js"></script>
+
+<!-- <script type="text/javascript" src="pdp.js"></script> -->
 <script src="proj4-compressed.js"></script>
 <script src="src/proj4leaflet.js"></script>
 <script src="src/L.TileLayer.BetterWMS.js"></script>
@@ -178,6 +192,7 @@ queue()
     .defer(d3.json, "ocean.json")
     .await(ready);
 
+var e;
 
 function ready(error, canada, us, ocean) {
 
@@ -333,7 +348,7 @@ function ready(error, canada, us, ocean) {
 
     var svgLeg = d3.select("#legMain").append("svg")
         .attr("width",600)
-        .attr("height",50);
+        .attr("height",450);
 
     var legend = svgLeg.selectAll('g.legendEntry')
         .data(colors.range().reverse())
@@ -386,19 +401,17 @@ function ready(error, canada, us, ocean) {
         relief;
         
 
-
-
     function drawMap(date, climate_var) {
 
         // use custom tiles. Comment out to use PCIC tile
-        var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:' + climate_var + date + '&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
-            imageBounds = [
-                [61.5, -113.05],
-                [47.1, -146]
-            ];
+        // var imageUrl = 'http://pbrown.ca:8080/geoserver/cite/wms?service=WMS&version=1.1.0&request=GetMap&layers=cite:' + climate_var + date + '&styles=&bbox=-41480.026427602745,330578.24608669477,1968950.324334159,1962724.6619271105&width=512&height=415&srs=EPSG:3153&format=image%2Fpng',
+        //     imageBounds = [
+        //         [61.5, -113.05],
+        //         [47.1, -146]
+        //     ];
 
-        relief = L.imageOverlay(imageUrl, imageBounds)
-        relief.addTo(map).bringToBack();
+        // relief = L.imageOverlay(imageUrl, imageBounds)
+        // relief.addTo(map).bringToBack();
 
 
         wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
@@ -410,15 +423,18 @@ function ready(error, canada, us, ocean) {
             month: date,
             time: '1985-' + date + '-15',
             styles: 'boxfill/rainbow',
+            COLORSCALERANGE: '-26,30',
             logscale: false,
             numcolorbands: 254,
             version: '1.1.1',
             continuousWorld: true,
-            opacity: 0 // change to 1 to make visible
+            opacity: 1 // change to 1 to make visible
         });
         console.log(wmsL)
 
         wmsL.addTo(map)
+
+
             // var mywms = L.tileLayer.wms("http://pbrown.ca:8080/geoserver/cite/wms", {
             // layers: 'cite:band1',
             //     format: 'image/png',
@@ -427,7 +443,10 @@ function ready(error, canada, us, ocean) {
             //     attribution: "myattribution"
             // });
             // mywms.addTo(map);
+
     };
+
+
 
     // trace selection
     $(document).ready(function() {
@@ -436,7 +455,7 @@ function ready(error, canada, us, ocean) {
             // document.getElementById("title").innerHTML = $('.climate_var').val();
             console.log(current.month)
             map.removeLayer(wmsL) // remove player to prevent them from piling up.
-            map.removeLayer(relief)
+            // map.removeLayer(relief)
             drawMap(current.month, climate_var)
 
         });
@@ -446,37 +465,83 @@ function ready(error, canada, us, ocean) {
 
     // legend 
     var ls_w = 26;
-    legend
-        .append("rect")
-        .attr("y", 25)
-        .attr("x", function(d, i) {
-            // console.log(d)
-            return (320) - (i * ls_w) - 2 * ls_w;
-        })
-        .attr("width", ls_w)
-        .attr("height", 10)
-        .style("fill", function(d) {
-            return d;
-        });
+    // legend
+    //     .append("rect")
+    //     .attr("y", 25)
+    //     .attr("x", function(d, i) {
+    //         // console.log(d)
+    //         return (320) - (i * ls_w) - 2 * ls_w;
+    //     })
+    //     .attr("width", ls_w)
+    //     .attr("height", 10)
+    //     .style("fill", function(d) {
+    //         return d;
+    //     });
 
-    legend.append("text")
-        .attr("y", 50)
-        .attr("x", function(d, i) {
-            return (320) - (i * ls_w) - ls_w - 10;
-        })
-        .text(function(d, i) {
+    svgLeg.append("image")
+        .attr("clip-path", "url(#clip)")
+        .attr("xlink:href", "http://tools.pacificclimate.org/ncWMS-PCIC/wms?REQUEST=GetLegendGraphic&COLORBARONLY=true&WIDTH=1&HEIGHT=13&PALETTE=boxfill/rainbow'&NUMCOLORBANDS=254&COLORSCALERANGE=-26,30")
+        .attr("width", 150)
+        .attr("height", 150)
+        .attr("transform", "translate(10,30)");
 
-            if (i === 0)
-                return legend_labels[colors.range().length - i - 1] + "\xB0 C";
-            else
-                return legend_labels[colors.range().length - i - 1];
-        });
+
+    // var j = $.ajax({
+    //     url: "http://tools.pacificclimate.org/dataportal/bc_prism/metadata.json?request=GetMinMaxWithUnits",
+    //     data: "&id=tmax_monClim_PRISM_historical_run1_197101-200012&var=tmax"
+    // });
+
+    // console.log(j)
+
+    var y = d3.scale.linear()
+    .range([150, 0]);
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .ticks(5)
+        .orient("right");
+
+    y.domain([-25, 30]);
+
+    svgLeg.append("g")
+        .attr("class", "y axisC colourY")
+        .call(yAxis)
+        .attr("transform", "translate(90,30)")
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 36)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Temperature \xB0 C");
+
+
+    // draw the text
+    // svgLeg.append("text")
+    //     .style("fill", "black")
+    //     .style("font-size", "12åpx")
+    //     .attr("dy", ".35em")
+    //     .attr("text-anchor", "middle")
+    //     .attr("transform", "translate(150,150) rotate(0)")
+    //     .text(e.responseJSON.min);
+
+
+    // svgLeg.append("text")
+    //     .attr("y", 50)
+    //     .attr("x", function(d, i) {
+    //         return (320) - (i * ls_w) - ls_w - 10;
+    //     })
+    //     .text(function(d, i) {
+
+    //         if (i === 0)
+    //             return legend_labels[colors.range().length - i - 1] + "\xB0 C";
+    //         else
+    //             return legend_labels[colors.range().length - i - 1];
+    //     });
 
 
 
 
     function brushed() {
-        console.log('hey')
 
         var value = brush.extent()[0];
 
@@ -491,7 +556,7 @@ function ready(error, canada, us, ocean) {
 
         current.month = brushDate;
         map.removeLayer(wmsL) // remove player to prevent them from piling up.
-        map.removeLayer(relief)
+        // map.removeLayer(relief)
         console.log(climate_var)
         drawMap(brushDate, climate_var)
 
@@ -565,7 +630,7 @@ var svg = d3.select("#chart").append("svg")
 x.domain(d3.extent(chartData, function(d) {
     return d.x;
 }));
-y.domain([-20, 30]);
+y.domain([-25, 30]);
 
 svg.append("g") //x axis group
     .attr("class", "x axisC")
@@ -598,6 +663,9 @@ svg.selectAll("circle")
         return y(d.y);
     })
     .style("fill", "rgb(214,39,40)");
+
+
+   
 </script>
 
 

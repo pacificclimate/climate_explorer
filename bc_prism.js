@@ -4,6 +4,25 @@ var current_dataset;
 var ncwmsCapabilities;
 var selectionBbox;
 
+function getBC3005Bounds() {
+    return new OpenLayers.Bounds(-236114, 41654.75, 2204236, 1947346.25);
+}
+
+function getProjection(a) {
+    return new OpenLayers.Projection("EPSG:" + a);
+}
+
+
+function BC3005_map_options() {
+    bounds = getBC3005Bounds();
+    var a = {
+        restrictedExtent: bounds,
+        displayProjection: getProjection(4326),
+        projection: getProjection(3005),
+        units: 'Meter'
+    };
+    return a;
+}
 function init_prism_map() {
     options = BC3005_map_options();
     options.tileManager = null;
@@ -67,14 +86,14 @@ function init_prism_map() {
         return map.getLayersByName(selLayerName)[0];
     };
     var c = new Colorbar("pdpColorbar", ncwms);
-    c.refresh_values();
+    // c.refresh_values();
     ncwms.events.registerPriority('change', ncwms, function(a) {
         var d = {
             "id": a.split('/')[0],
             "var": a.split('/')[1]
         };
         var e = $.ajax({
-            url: "../metadata.json?request=GetMinMaxWithUnits",
+            url: "http://tools.pacificclimate.org/dataportal/bc_prism/metadata.json?request=GetMinMaxWithUnits",
             data: d
         });
         e.done(function(d) {

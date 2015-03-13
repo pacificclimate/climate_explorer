@@ -121,7 +121,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
             x.domain(d3.extent(chartData, function(d) {
                 return d.x;
             }));
-            y.domain([-20, 30]);
+            y.domain([-25, 30]);
 
             // y.domain(d3.extent(chartData, function(d) {return d.y;}));
 
