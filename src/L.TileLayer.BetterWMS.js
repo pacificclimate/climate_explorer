@@ -77,17 +77,12 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
                 svg.append("g")
                     .attr("class", "y axisC")
-                    .call(yAxis)
-                    .append("text")
-                    .attr("transform", "rotate(-90)")
-                    .attr("y", 6)
-                    .attr("dy", ".71em")
-                    .style("text-anchor", "end")
-                    .text("Temperature \xB0 C");
+                    .call(yAxis);
 
                 counter++;
 
             }
+
 
 
             chartData = [];
@@ -115,15 +110,27 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
             chartData.forEach(function(d) {
                 d.x = parseDate(d.x);
+
             });
 
-
+            
             x.domain(d3.extent(chartData, function(d) {
-                return d.x;
+                console.log(d.x)
+                return d3.time.month(d.x);
             }));
+            x.nice(d3.time.month);
 
             switch(climate_var) {
                 case 'pr':
+                    d3.select("#temp").remove()
+                    svg.append("text")
+                        .attr("transform", "rotate(-90)")
+                        .attr("y", 6)
+                        .attr("dy", ".71em")
+                        .style("text-anchor", "end")
+                        .text("Precipitation (mm)")
+                        .attr("id",'temp');
+
                     var y = d3.scale.log()
                         .range([heightG, 0]);
 
@@ -131,6 +138,15 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
                 case 'tmax':
                 case 'tmin':
+                    d3.select("#temp").remove()
+                    svg.append("text")
+                            .attr("transform", "rotate(-90)")
+                            .attr("y", 6)
+                            .attr("dy", ".71em")
+                            .style("text-anchor", "end")
+                            .text("Temperature (\xB0 C)")
+                            .attr("id",'temp');
+
                     var y = d3.scale.linear()
                         .range([heightG, 0]);
 
@@ -138,18 +154,22 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
 
             }
+
             yAxis = d3.svg.axis()
                         .scale(y)
+                        .ticks(5,",.1")
                         .orient("left");
+
+
             var line = d3.svg.line()
-                .interpolate("basis")
+                .interpolate("linear")
                 .x(function(d) {
                     return x(d.x);
                 })
                 .y(function(d) {
                     return y(d.y);
                 });
-                
+
             y.domain([ymin, ymax]);
 
             // y.domain(d3.extent(chartData, function(d) {return d.y;}));
@@ -184,6 +204,13 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .transition()
                 .duration(1000)
                 .attr("d", line(chartData));
+
+            var xAxis = d3.svg.axis()
+                .scale(x)
+                .ticks(12)
+                .orient("bottom")
+                .tickFormat(d3.time.format("%b"));
+
 
 
             //Update X axis

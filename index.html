@@ -420,7 +420,7 @@ function ready(error, canada, us, ocean) {
 
 
 
-
+        console.log(date)
         switch (climate_var) {
 
             case 'pr':
@@ -440,7 +440,7 @@ function ready(error, canada, us, ocean) {
                 continuousWorld: true,
                 opacity: 1 // change to 1 to make visible
             });
-            console.log(wmsL)
+            // console.log(wmsL)
 
             wmsL.addTo(map)
                 svgLeg.selectAll("image").remove()
@@ -593,16 +593,16 @@ function ready(error, canada, us, ocean) {
         if (d3.event.sourceEvent) {
 
             value = Math.round(x.invert(d3.mouse(this)[0]));
-
+            console.log(value)
             brush.extent([value, value]);
         }
         handle.attr("cx", x(value));
-        var brushDate = brushToMonth(value - 1);
-
+        var brushDate = brushToMonth(value);
+        console.log(brushDate)
         current.month = brushDate;
         map.removeLayer(wmsL) // remove player to prevent them from piling up.
             // map.removeLayer(relief)
-        console.log(climate_var)
+
         drawMap(brushDate, climate_var)
 
     }
@@ -617,7 +617,7 @@ var counter = 0;
 
 var chartData = [];
 
-for (i = 1; i < 0; i++) {
+for (i = 0; i < 0; i++) {
     chartData.push({
         x: '1985-' + i + '-15',
         y: i
@@ -641,7 +641,13 @@ chartData.forEach(function(d) {
     d.x = parseDate(d.x);
 });
 
+console.log(chartData)
+
 var x = d3.time.scale()
+    .domain([d3.extent(chartData, function(d) {
+        console.log(d.x)
+        return d.x;
+    })])
     .range([0, widthG]);
 
 var y = d3.scale.linear()
@@ -649,15 +655,17 @@ var y = d3.scale.linear()
 
 var xAxis = d3.svg.axis()
     .scale(x)
+    .ticks(11)
     .orient("bottom")
     .tickFormat(d3.time.format("%b"));
 
 var yAxis = d3.svg.axis()
     .scale(y)
+    .ticks(5,",.1")
     .orient("left");
 
 var line = d3.svg.line()
-    .interpolate("basis")
+    .interpolate("linear")
     .x(function(d) {
         return x(d.x);
     })
@@ -672,9 +680,8 @@ var svg = d3.select("#chart").append("svg")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-x.domain(d3.extent(chartData, function(d) {
-    return d.x;
-}));
+
+
 y.domain([-25, 30]);
 
 svg.append("g") //x axis group
