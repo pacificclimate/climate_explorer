@@ -121,7 +121,36 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
             x.domain(d3.extent(chartData, function(d) {
                 return d.x;
             }));
-            y.domain([-25, 30]);
+
+            switch(climate_var) {
+                case 'pr':
+                    var y = d3.scale.log()
+                        .range([heightG, 0]);
+
+                break;
+
+                case 'tmax':
+                case 'tmin':
+                    var y = d3.scale.linear()
+                        .range([heightG, 0]);
+
+                break;
+
+
+            }
+            yAxis = d3.svg.axis()
+                        .scale(y)
+                        .orient("left");
+            var line = d3.svg.line()
+                .interpolate("basis")
+                .x(function(d) {
+                    return x(d.x);
+                })
+                .y(function(d) {
+                    return y(d.y);
+                });
+                
+            y.domain([ymin, ymax]);
 
             // y.domain(d3.extent(chartData, function(d) {return d.y;}));
 
