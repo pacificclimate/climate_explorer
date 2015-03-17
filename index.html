@@ -310,6 +310,13 @@ function ready(error, canada, us, ocean) {
 
     // console.log(current.month)
     var climate_var = "tmax";
+
+    var svgLeg = d3.select("#legMain").append("svg")
+        .attr("width", 600)
+        .attr("height", 450);
+
+
+
     drawMap(current.month, climate_var) //initialize with Jan and tmax for now
 
     sliderContainer.append("g")
@@ -346,9 +353,7 @@ function ready(error, canada, us, ocean) {
         .attr("transform", "translate(0," + sliderHeight / 2 + ")")
         .attr("r", 9);
 
-    var svgLeg = d3.select("#legMain").append("svg")
-        .attr("width",600)
-        .attr("height",450);
+
 
     var legend = svgLeg.selectAll('g.legendEntry')
         .data(colors.range().reverse())
@@ -399,7 +404,7 @@ function ready(error, canada, us, ocean) {
 
     var wmsL,
         relief;
-        
+
 
     function drawMap(date, climate_var) {
 
@@ -434,15 +439,107 @@ function ready(error, canada, us, ocean) {
 
         wmsL.addTo(map)
 
+        switch (climate_var) {
 
-            // var mywms = L.tileLayer.wms("http://pbrown.ca:8080/geoserver/cite/wms", {
-            // layers: 'cite:band1',
-            //     format: 'image/png',
-            //     transparent: true,
-            //     version: '1.1.0',
-            //     attribution: "myattribution"
-            // });
-            // mywms.addTo(map);
+            case 'pr':
+
+                svgLeg.selectAll("image").remove()
+                svgLeg.selectAll("g").remove()
+
+                svgLeg.append("image")
+                    .attr("clip-path", "url(#clip)")
+                    .attr("xlink:href", "http://tools.pacificclimate.org/ncWMS-PCIC/wms?REQUEST=GetLegendGraphic&COLORBARONLY=true&WIDTH=1&HEIGHT=13&PALETTE=occam_inv&NUMCOLORBANDS=254&COLORSCALERANGE=0,1200")
+                    .attr("width", 150)
+                    .attr("height", 150)
+                    .attr("transform", "translate(10,30)");
+
+
+                // var j = $.ajax({
+                //     url: "http://tools.pacificclimate.org/dataportal/bc_prism/metadata.json?request=GetMinMaxWithUnits",
+                //     data: "&id=tmax_monClim_PRISM_historical_run1_197101-200012&var=tmax"
+                // });
+
+                // console.log(j)
+
+                var y = d3.scale.linear()
+                    .range([150, 0]);
+
+                var yAxis = d3.svg.axis()
+                    .scale(y)
+                    .ticks(5)
+                    .orient("right");
+
+                y.domain([0, 1200]);
+
+                svgLeg.append("g")
+                    .attr("class", "y axisC colourY")
+                    .call(yAxis)
+                    .attr("transform", "translate(90,30)")
+                    .append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 46)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text("Precipitation (mm)");
+
+                break;
+
+            case 'tmax':
+            case 'tmin':
+
+
+                svgLeg.selectAll("image").remove()
+                svgLeg.selectAll("g").remove()
+
+                svgLeg.append("image")
+                    .attr("clip-path", "url(#clip)")
+                    .attr("xlink:href", "http://tools.pacificclimate.org/ncWMS-PCIC/wms?REQUEST=GetLegendGraphic&COLORBARONLY=true&WIDTH=1&HEIGHT=13&PALETTE=boxfill/rainbow'&NUMCOLORBANDS=254&COLORSCALERANGE=-26,30")
+                    .attr("width", 150)
+                    .attr("height", 150)
+                    .attr("transform", "translate(10,30)");
+
+
+                // var j = $.ajax({
+                //     url: "http://tools.pacificclimate.org/dataportal/bc_prism/metadata.json?request=GetMinMaxWithUnits",
+                //     data: "&id=tmax_monClim_PRISM_historical_run1_197101-200012&var=tmax"
+                // });
+
+                // console.log(j)
+
+                var y = d3.scale.linear()
+                    .range([150, 0]);
+
+                var yAxis = d3.svg.axis()
+                    .scale(y)
+                    .ticks(5)
+                    .orient("right");
+
+                y.domain([-25, 30]);
+
+                svgLeg.append("g")
+                    .attr("class", "y axisC colourY")
+                    .call(yAxis)
+                    .attr("transform", "translate(90,30)")
+                    .append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 36)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text("Temperature (\xB0C)");
+
+                break;
+
+        }
+
+
+        // var mywms = L.tileLayer.wms("http://pbrown.ca:8080/geoserver/cite/wms", {
+        // layers: 'cite:band1',
+        //     format: 'image/png',
+        //     transparent: true,
+        //     version: '1.1.0',
+        //     attribution: "myattribution"
+        // });
+        // mywms.addTo(map);
 
     };
 
@@ -455,8 +552,10 @@ function ready(error, canada, us, ocean) {
             // document.getElementById("title").innerHTML = $('.climate_var').val();
             console.log(current.month)
             map.removeLayer(wmsL) // remove player to prevent them from piling up.
-            // map.removeLayer(relief)
+                // map.removeLayer(relief)
             drawMap(current.month, climate_var)
+
+
 
         });
 
@@ -464,7 +563,7 @@ function ready(error, canada, us, ocean) {
 
 
     // legend 
-    var ls_w = 26;
+    // var ls_w = 26;
     // legend
     //     .append("rect")
     //     .attr("y", 25)
@@ -478,41 +577,7 @@ function ready(error, canada, us, ocean) {
     //         return d;
     //     });
 
-    svgLeg.append("image")
-        .attr("clip-path", "url(#clip)")
-        .attr("xlink:href", "http://tools.pacificclimate.org/ncWMS-PCIC/wms?REQUEST=GetLegendGraphic&COLORBARONLY=true&WIDTH=1&HEIGHT=13&PALETTE=boxfill/rainbow'&NUMCOLORBANDS=254&COLORSCALERANGE=-26,30")
-        .attr("width", 150)
-        .attr("height", 150)
-        .attr("transform", "translate(10,30)");
 
-
-    // var j = $.ajax({
-    //     url: "http://tools.pacificclimate.org/dataportal/bc_prism/metadata.json?request=GetMinMaxWithUnits",
-    //     data: "&id=tmax_monClim_PRISM_historical_run1_197101-200012&var=tmax"
-    // });
-
-    // console.log(j)
-
-    var y = d3.scale.linear()
-    .range([150, 0]);
-
-    var yAxis = d3.svg.axis()
-        .scale(y)
-        .ticks(5)
-        .orient("right");
-
-    y.domain([-25, 30]);
-
-    svgLeg.append("g")
-        .attr("class", "y axisC colourY")
-        .call(yAxis)
-        .attr("transform", "translate(90,30)")
-        .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 36)
-        .attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .text("Temperature \xB0 C");
 
 
     // draw the text
@@ -556,7 +621,7 @@ function ready(error, canada, us, ocean) {
 
         current.month = brushDate;
         map.removeLayer(wmsL) // remove player to prevent them from piling up.
-        // map.removeLayer(relief)
+            // map.removeLayer(relief)
         console.log(climate_var)
         drawMap(brushDate, climate_var)
 
@@ -663,7 +728,6 @@ svg.selectAll("circle")
         return y(d.y);
     })
     .style("fill", "rgb(214,39,40)");
-
 
    
 </script>
