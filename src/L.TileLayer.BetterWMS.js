@@ -116,7 +116,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
             
             x.domain(d3.extent(chartData, function(d) {
-                console.log(d.x)
+                // console.log(d.x)
                 return d3.time.month(d.x);
             }));
 
@@ -204,6 +204,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .duration(1000)
                 .attr("r", 3.5)
                 .attr("cx", function(d) {
+                    console.log(d)
                     return x(d.x);
                 })
                 .attr("cy", function(d) {
@@ -233,11 +234,11 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .attr("class", "focus")
                 .style("display", "none");
 
-            focus.append("circle")
-                  .attr("r", 4.5);
+        
 
             focus.append("text")
                 .attr("x", 9)
+                .attr('y',10)
                 .attr("dy", ".35em");
 
             svg.append("rect")
@@ -253,10 +254,9 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                     i = bisectDate(chartData, x0, 1),
                     d0 = chartData[i-1],
                     d1 = chartData[i],
-                    d = x0 - d0.x > d1.x - x0 ? d1 : d0;
-                    console.log(d)
-                focus.attr("transform", "translate(" + x(d.x) + "," + y(d.y) + ")");
-                focus.select("text").text(d.y);
+                    dd = x0 - d0.x > d1.x - x0 ? d1 : d0;
+                focus.attr("transform", "translate(" + x(dd.x) + "," + y(dd.y) + ")");
+                focus.select("text").text(dd.y);
             }
 
 
