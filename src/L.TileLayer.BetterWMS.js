@@ -106,7 +106,8 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
             //     width = 960 /2 - margin.left - margin.right,
             //     height = 250 - margin.top - margin.bottom;
 
-            var parseDate = d3.time.format("%Y-%m-%d").parse;
+            var parseDate = d3.time.format("%Y-%m-%d").parse,
+                bisectDate = d3.bisector(function(d) { return d.x; }).left;
 
             chartData.forEach(function(d) {
                 d.x = parseDate(d.x);
@@ -118,7 +119,8 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 console.log(d.x)
                 return d3.time.month(d.x);
             }));
-            x.nice(d3.time.month);
+
+            x.nice(d3.time.month); //get first month to show on axis
 
             switch(climate_var) {
                 case 'pr':
@@ -133,6 +135,15 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
                     var y = d3.scale.log()
                         .range([heightG, 0]);
+
+                    var line = d3.svg.line()
+                        .interpolate("step")
+                        .x(function(d) {
+                            return x(d.x);
+                        })
+                        .y(function(d) {
+                            return y(d.y);
+                        });
 
                 break;
 
@@ -150,8 +161,16 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                     var y = d3.scale.linear()
                         .range([heightG, 0]);
 
-                break;
+                    var line = d3.svg.line()
+                        .interpolate("basis")
+                        .x(function(d) {
+                            return x(d.x);
+                        })
+                        .y(function(d) {
+                            return y(d.y);
+                        });
 
+                break;
 
             }
 
@@ -161,14 +180,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                         .orient("left");
 
 
-            var line = d3.svg.line()
-                .interpolate("linear")
-                .x(function(d) {
-                    return x(d.x);
-                })
-                .y(function(d) {
-                    return y(d.y);
-                });
+            
 
             y.domain([ymin, ymax]);
 
@@ -205,12 +217,6 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .duration(1000)
                 .attr("d", line(chartData));
 
-            var xAxis = d3.svg.axis()
-                .scale(x)
-                .ticks(12)
-                .orient("bottom")
-                .tickFormat(d3.time.format("%b"));
-
 
 
             //Update X axis
@@ -222,6 +228,37 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .transition()
                 .duration(1000)
                 .call(yAxis);
+
+            var focus = svg.append("g")
+                .attr("class", "focus")
+                .style("display", "none");
+
+            focus.append("circle")
+                  .attr("r", 4.5);
+
+            focus.append("text")
+                .attr("x", 9)
+                .attr("dy", ".35em");
+
+            svg.append("rect")
+              .attr("class", "overlay")
+              .attr("width", width)
+              .attr("height", height)
+              .on("mouseover", function() { focus.style("display", null); })
+              .on("mouseout", function() { focus.style("display", "none"); })
+              .on("mousemove", mousemove);
+
+            function mousemove() {
+                var x0 = x.invert(d3.mouse(this)[0]),
+                    i = bisectDate(chartData, x0, 1),
+                    d0 = chartData[i-1],
+                    d1 = chartData[i],
+                    d = x0 - d0.x > d1.x - x0 ? d1 : d0;
+                    console.log(d)
+                focus.attr("transform", "translate(" + x(d.x) + "," + y(d.y) + ")");
+                focus.select("text").text(d.y);
+            }
+
 
             L.popup({
                 maxWidth: 800

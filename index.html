@@ -117,6 +117,15 @@
 
 }
 
+.overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+.focus circle {
+  fill: none;
+  stroke: steelblue;
+}
 
 </style>
 
@@ -674,7 +683,7 @@ var line = d3.svg.line()
     });
 
 var svg = d3.select("#chart").append("svg")
-    .attr("width", widthG + margin.left + margin.right)
+    .attr("width", widthG + 100 + margin.left + margin.right)
     .attr("height", heightG + margin.top + margin.bottom)
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
