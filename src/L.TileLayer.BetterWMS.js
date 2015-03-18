@@ -204,7 +204,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .duration(1000)
                 .attr("r", 3.5)
                 .attr("cx", function(d) {
-                    console.log(d)
+                    // console.log(d)
                     return x(d.x);
                 })
                 .attr("cy", function(d) {
@@ -237,7 +237,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
         
 
             focus.append("text")
-                .attr("x", 9)
+                .attr("x", 6)
                 .attr('y',10)
                 .attr("dy", ".35em");
 
@@ -256,16 +256,30 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                     d1 = chartData[i],
                     dd = x0 - d0.x > d1.x - x0 ? d1 : d0;
                 focus.attr("transform", "translate(" + x(dd.x) + "," + y(dd.y) + ")");
-                focus.select("text").text(dd.y);
+                focus.select("text").text(dd.y.toFixed(2));
             }
 
+            switch(climate_var) {
+                case 'tmax':
+                case 'tmin':
+                    L.popup({
+                        maxWidth: 800
+                    })
+                    .setLatLng(latlng)
+                    .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML).toFixed(2)+" \xB0C")
+                    .openOn(map);    
+                break;
 
-            L.popup({
-                maxWidth: 800
-            })
-            .setLatLng(latlng)
-            .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML).toFixed(2)+" \xB0C")
-            .openOn(map);    
+                case 'pr':
+                    L.popup({
+                            maxWidth: 800
+                        })
+                        .setLatLng(latlng)
+                        .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML).toFixed(2)+" mm")
+                        .openOn(map);    
+                break;
+            }
+
 
         };
 
