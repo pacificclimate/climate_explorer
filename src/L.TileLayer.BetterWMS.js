@@ -86,12 +86,12 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
             }
 
             chartData = [];
-
+            // debugger;
             // loop though time / values and create object
             for (i = 0; i < 12; i++) {
                 chartData.push({
-                    x: content.getElementsByTagName('time')[i].innerHTML.substr(0, 10),
-                    y: Number(content.getElementsByTagName('value')[i].innerHTML)
+                    x: content.getElementsByTagName('time')[i].childNodes[0].nodeValue.substr(0,10),
+                    y: Number(content.getElementsByTagName('value')[i].childNodes[0].nodeValue)
 
                 })
             }
@@ -257,7 +257,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                             maxWidth: 800
                         })
                         .setLatLng(latlng)
-                        .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML).toFixed(2) + " \xB0C")
+                        .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].childNodes[0].nodeValue).toFixed(2) + " \xB0C")
                         .openOn(map);
                     break;
 
@@ -266,7 +266,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                             maxWidth: 800
                         })
                         .setLatLng(latlng)
-                        .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML).toFixed(2) + " mm")
+                        .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].childNodes[0].nodeValue).toFixed(2) + " mm")
                         .openOn(map);
                     break;
             }

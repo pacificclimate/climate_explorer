@@ -33,6 +33,7 @@ queue()
 var e,ymin,ymax,climate_var;
 
 function ready(error, canada, usa, ocean) {
+    console.log('test')
 
     var sliderWidth = 200,
         sliderHeight = 30;
