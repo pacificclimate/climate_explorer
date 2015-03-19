@@ -11,6 +11,7 @@ build/gpr_000b11a_e.shp: build/gpr_000b11a_e.zip
 # 	build/canada.shp \
 # 	build/gpr_000b11a_e.shp
 # this is for PCICwms
+
 build/canada.json: build/gpr_000b11a_e.shp
 	ogr2ogr -f GeoJSON -t_srs "+proj=latlong +datum=WGS84" \
 	build/canada.json \
@@ -23,31 +24,60 @@ canada.json: build/canada.json
 		-s 1e-8 \
 		--properties='province=PRENAME' \
 		-- $<
-# build/BC.json: build/gpr_000b11a_e.shp
-# 	ogr2ogr -f GeoJSON \
-# 	-t_srs "+proj=aea +lat_1=20 +lat_2=60 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs " \
-# 	build/BC.json \
-# 	build/gpr_000b11a_e.shp
 
-# prov.json: build/canada.shp
-# 	node_modules/.bin/topojson \
-# 		-o $@ \
-# 	    --properties='province=PRENAME' \
-# 		--simplify=0.5 \
-# 		-- prov=$<
+#Get US
+build/gz_2010_us_050_00_20m.zip:
+	mkdir -p $(dir $@)
+	curl -o $@ http://www2.census.gov/geo/tiger/GENZ2010/$(notdir $@)
 
 
-newUs.json: build/us.json
+build/gz_2010_us_050_00_20m.shp: build/gz_2010_us_050_00_20m.zip
+	unzip -od $(dir $@) $<
+	touch $@
+
+build/usa.json: build/gz_2010_us_050_00_20m.shp
+	ogr2ogr -f GeoJSON -t_srs "+proj=latlong +datum=WGS84" \
+	build/usa.json \
+	build/gz_2010_us_050_00_20m.shp	
+
+
+build/counties.json: build/usa.json ACS_12_5YR_B01003_with_ann.csv 
 	node_modules/.bin/topojson \
 		-o $@ \
-		--projection='width = 960, height = 600, d3.geo.albers() \
-			.rotate([96, 0]) \
-		    .center([-32, 53.9]) \
-		    .parallels([20, 60]) \
-		    .scale(1970) \
-		    .translate([width / 2, height / 2])' \
-		--simplify=0.5 \
-	    -- newUs=$<
+		--id-property='STATE+COUNTY,Id2' \
+		--external-properties=ACS_12_5YR_B01003_with_ann.csv \
+		--properties='name=Geography' \
+		-s 1e-8 \
+		--filter=none \
+		-- counties=$<
+
+build/states.json: build/counties.json
+	node_modules/.bin/topojson-merge \
+		-o $@ \
+		--in-object=counties \
+		--out-object=states \
+		--key='d.id.substring(0, 2)' \
+		-- $<
+
+usa.json: build/states.json
+	node_modules/.bin/topojson-merge \
+		-o $@ \
+		--in-object=states \
+		--out-object=nation \
+		-- $<
+
+
+# newUs.json: build/us.json
+# 	node_modules/.bin/topojson \
+# 		-o $@ \
+# 		--projection='width = 960, height = 600, d3.geo.albers() \
+# 			.rotate([96, 0]) \
+# 		    .center([-32, 53.9]) \
+# 		    .parallels([20, 60]) \
+# 		    .scale(1970) \
+# 		    .translate([width / 2, height / 2])' \
+# 		--simplify=0.5 \
+# 	    -- newUs=$<
 
 
 
@@ -107,7 +137,7 @@ build/pr12.tiff: build/final.tiff
 
 # set correct projection on 'raw' tif, then add to geoserver
 
-us.json: us-states.json
+us1.json: us-states.json
 	node_modules/.bin/topojson \
 		-o $@ \
 		--properties \
@@ -118,7 +148,7 @@ us.json: us-states.json
 		    .scale(1970) \
 		    .translate([width / 2, height / 2])' \
 		--simplify=0.5 \
-	    -- us=$<
+	    -- us1=$<
 
 # build/finalWms.tiff: build/testWms.tif
 # 	gdalwarp \

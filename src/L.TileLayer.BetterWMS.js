@@ -1,3 +1,4 @@
+// modified from https://gist.github.com/rclark/6908938
 L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
     onAdd: function(map) {
@@ -27,8 +28,8 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 var err = typeof data === 'string' ? null : data;
                 showResults(err, evt.latlng, data);
             },
-            error: function (xhr, status, error) {
-                showResults(error);  
+            error: function(xhr, status, error) {
+                showResults(error);
             }
         });
     },
@@ -55,7 +56,8 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 query_layers: this.wmsParams.layers,
                 info_format: 'text/xml'
             };
-        // implemented from http://gis.stackexchange.com/questions/109414/leaflet-wms-getfeatureinfo-gives-result-only-on-zoom-level-10/132336#132336
+
+        // values weren't showing for a lot of locations clicked on. Implemented from http://gis.stackexchange.com/questions/109414/leaflet-wms-getfeatureinfo-gives-result-only-on-zoom-level-10/132336#132336
         var bds = map.getBounds();
         var sz = map.getSize();
         var w = bds.getNorthEast().lng - bds.getSouthWest().lng;
@@ -71,8 +73,8 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
     showGetFeatureInfo: function(err, latlng, content) {
 
-        if((content.getElementsByTagName('value')[0].innerHTML)!='none'){
-            // this is added to make text visible but only add once
+        if ((content.getElementsByTagName('value')[0].innerHTML) != 'none') {
+            // make chart text visible but only add once
             while (counter < 1) {
 
                 svg.append("g")
@@ -83,15 +85,10 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
             }
 
-
-
             chartData = [];
-            // console.log(content.getElementsByTagName('value').)
-            
+
             // loop though time / values and create object
             for (i = 0; i < 12; i++) {
-                // if((content.getElementsByTagName('value')[i].innerHTML)=='none')
-                //     break;
                 chartData.push({
                     x: content.getElementsByTagName('time')[i].innerHTML.substr(0, 10),
                     y: Number(content.getElementsByTagName('value')[i].innerHTML)
@@ -99,30 +96,25 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 })
             }
 
-
-            // make graph here (move later)
-
-            // var margin = {top: 20, right: 20, bottom: 30, left: 50},
-            //     width = 960 /2 - margin.left - margin.right,
-            //     height = 250 - margin.top - margin.bottom;
-
+            // populate graph
             var parseDate = d3.time.format("%Y-%m-%d").parse,
-                bisectDate = d3.bisector(function(d) { return d.x; }).left;
+                bisectDate = d3.bisector(function(d) {
+                    return d.x;
+                }).left;
 
             chartData.forEach(function(d) {
                 d.x = parseDate(d.x);
 
             });
 
-            
+
             x.domain(d3.extent(chartData, function(d) {
-                // console.log(d.x)
                 return d3.time.month(d.x);
             }));
 
-            x.nice(d3.time.month); //get first month to show on axis
+            x.nice(d3.time.month); //needed to show first month on x-axis
 
-            switch(climate_var) {
+            switch (climate_var) {
                 case 'pr':
                     d3.select("#temp").remove()
                     svg.append("text")
@@ -131,7 +123,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                         .attr("dy", ".71em")
                         .style("text-anchor", "end")
                         .text("Precipitation (mm)")
-                        .attr("id",'temp');
+                        .attr("id", 'temp');
 
                     var y = d3.scale.log()
                         .range([heightG, 0]);
@@ -145,18 +137,18 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                             return y(d.y);
                         });
 
-                break;
+                    break;
 
                 case 'tmax':
                 case 'tmin':
                     d3.select("#temp").remove()
                     svg.append("text")
-                            .attr("transform", "rotate(-90)")
-                            .attr("y", 6)
-                            .attr("dy", ".71em")
-                            .style("text-anchor", "end")
-                            .text("Temperature (\xB0 C)")
-                            .attr("id",'temp');
+                        .attr("transform", "rotate(-90)")
+                        .attr("y", 6)
+                        .attr("dy", ".71em")
+                        .style("text-anchor", "end")
+                        .text("Temperature (\xB0 C)")
+                        .attr("id", 'temp');
 
                     var y = d3.scale.linear()
                         .range([heightG, 0]);
@@ -170,17 +162,14 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                             return y(d.y);
                         });
 
-                break;
+                    break;
 
             }
 
             yAxis = d3.svg.axis()
-                        .scale(y)
-                        .ticks(5,",.1")
-                        .orient("left");
-
-
-            
+                .scale(y)
+                .ticks(5, ",.1")
+                .orient("left");
 
             y.domain([ymin, ymax]);
 
@@ -199,6 +188,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 })
                 .style("fill", "rgb(214,39,40)");
 
+            // circle and line transitions
             svg.selectAll("circle")
                 .transition()
                 .duration(1000)
@@ -212,79 +202,78 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 })
                 .style("fill", "rgb(214,39,40)");
 
-
             svg.selectAll("path")
                 .transition()
                 .duration(1000)
                 .attr("d", line(chartData));
 
 
-
             //Update X axis
             svg.select(".x.axisC")
                 .call(xAxis);
 
-            //Update Y axis
+            //y-axis transition
             svg.select(".y.axisC")
                 .transition()
                 .duration(1000)
                 .call(yAxis);
 
+            // mouseover stuff
             var focus = svg.append("g")
                 .attr("class", "focus")
                 .style("display", "none");
 
-        
-
             focus.append("text")
                 .attr("x", 6)
-                .attr('y',10)
+                .attr('y', 10)
                 .attr("dy", ".35em");
 
             svg.append("rect")
-              .attr("class", "overlay")
-              .attr("width", width)
-              .attr("height", height)
-              .on("mouseover", function() { focus.style("display", null); })
-              .on("mouseout", function() { focus.style("display", "none"); })
-              .on("mousemove", mousemove);
+                .attr("class", "overlay")
+                .attr("width", width)
+                .attr("height", height)
+                .on("mouseover", function() {
+                    focus.style("display", null);
+                })
+                .on("mouseout", function() {
+                    focus.style("display", "none");
+                })
+                .on("mousemove", mousemove);
 
             function mousemove() {
                 var x0 = x.invert(d3.mouse(this)[0]),
                     i = bisectDate(chartData, x0, 1),
-                    d0 = chartData[i-1],
+                    d0 = chartData[i - 1],
                     d1 = chartData[i],
                     dd = x0 - d0.x > d1.x - x0 ? d1 : d0;
                 focus.attr("transform", "translate(" + x(dd.x) + "," + y(dd.y) + ")");
                 focus.select("text").text(dd.y.toFixed(2));
             }
 
-            switch(climate_var) {
+            switch (climate_var) {
                 case 'tmax':
                 case 'tmin':
                     L.popup({
-                        maxWidth: 800
-                    })
-                    .setLatLng(latlng)
-                    .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML).toFixed(2)+" \xB0C")
-                    .openOn(map);    
-                break;
+                            maxWidth: 800
+                        })
+                        .setLatLng(latlng)
+                        .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML).toFixed(2) + " \xB0C")
+                        .openOn(map);
+                    break;
 
                 case 'pr':
                     L.popup({
                             maxWidth: 800
                         })
                         .setLatLng(latlng)
-                        .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML).toFixed(2)+" mm")
-                        .openOn(map);    
-                break;
+                        .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].innerHTML).toFixed(2) + " mm")
+                        .openOn(map);
+                    break;
             }
-
 
         };
 
-        
-        }
+    }
 
 });
 
