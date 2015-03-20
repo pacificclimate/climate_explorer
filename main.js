@@ -51,10 +51,6 @@ function ready(error, canada, usa, ocean) {
         maxValue = 12,
         moving;
 
-    var colors = d3.scale.quantize()
-        .range(["rgb(69,117,180)", "rgb(116,173,209)", "rgb(171,217,233)", "rgb(224,243,248)", "rgb(255,255,178)", "rgb(254,217,118)", "rgb(254,178,76)", "rgb(253,141,60)", "rgb(252,78,42)", "rgb(227,26,28)", "rgb(177,0,38)"]);
-
-    var legend_labels = ["-20", "-15", "-10", "-5", "0", "5", "10", "15", "20", "25", "30"]
 
     var sliderContainer = d3.select("#slider").append("svg")
         .attr("width", sliderWidth + margin.left + margin.right + 10)
@@ -147,7 +143,7 @@ function ready(error, canada, usa, ocean) {
         .attr("width", 600)
         .attr("height", 450);
 
-    drawMap(current.month, climate_var) //initialize with Jan and tmax for now
+    drawMap(current.month, climate_var) //initialize with Jan and tmax
 
     sliderContainer.append("g")
         .attr("class", "x axis")
@@ -183,11 +179,6 @@ function ready(error, canada, usa, ocean) {
         .attr("transform", "translate(0," + sliderHeight / 2 + ")")
         .attr("r", 9);
 
-    var legend = svgLeg.selectAll('g.legendEntry')
-        .data(colors.range().reverse())
-        .enter()
-        .append("g")
-        .attr("class", 'legend');
 
     reset();
 
@@ -248,8 +239,7 @@ function ready(error, canada, usa, ocean) {
                 logscale: true,
                 numcolorbands: 254,
                 version: '1.1.1',
-                continuousWorld: true,
-                opacity: 1 // change to 1 to make visible
+                continuousWorld: true
             });
             // console.log(wmsL)
 
@@ -305,8 +295,7 @@ function ready(error, canada, usa, ocean) {
                 logscale: false,
                 numcolorbands: 254,
                 version: '1.1.1',
-                continuousWorld: true,
-                opacity: 1 // change to 1 to make visible
+                continuousWorld: true
             });
 
             wmsL.addTo(map)
@@ -361,9 +350,8 @@ function ready(error, canada, usa, ocean) {
     $(document).ready(function() {
         $('.climate_var').on('change', function() {
             climate_var = $('.climate_var').val();
-            // document.getElementById("title").innerHTML = $('.climate_var').val();
-            console.log(current.month)
-            map.removeLayer(wmsL) // remove player to prevent them from piling up.
+   
+            map.removeLayer(wmsL) // remove layer to prevent them from piling up.
           
             drawMap(current.month, climate_var)
 
@@ -386,7 +374,7 @@ function ready(error, canada, usa, ocean) {
         var brushDate = brushToMonth(value);
         console.log(brushDate)
         current.month = brushDate;
-        map.removeLayer(wmsL) // remove player to prevent them from piling up.
+        map.removeLayer(wmsL) // remove layer to prevent them from piling up.
            
 
         drawMap(brushDate, climate_var)
