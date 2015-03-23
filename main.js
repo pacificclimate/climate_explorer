@@ -14,7 +14,7 @@ var crs = new L.Proj.CRS('EPSG:3005',
     northEast = L.latLng(60.364901, -114.917969),
     bounds = L.latLngBounds(southWest, northEast);
 
-map = new L.Map('map', {
+var map = new L.Map('map', {
     crs: crs,
     continuousWorld: true,
     worldCopyJump: false,
@@ -32,60 +32,66 @@ queue()
 
 var e,ymin,ymax,climate_var;
 
+var sliderWidth = 200,
+        sliderHeight = 30;
+var wmsL;
+
+var margin = {
+    top: 10,
+    right: 10,
+    bottom: 10,
+    left: 10
+}
+
+var current = {
+        "month": 1
+    },
+    maxValue = 12,
+    moving;
+
+var sliderContainer = d3.select("#slider").append("svg")
+    .attr("width", sliderWidth + margin.left + margin.right + 10)
+    .attr("height", sliderHeight + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + (margin.top) + ")");
+
+var brushToMonth = d3.scale.quantile()
+        .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+        .range([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+
+var xTicks = {
+    "1": "Jan",
+    "2": "",
+    "3": "Mar",
+    "4": "",
+    "5": "May",
+    "6": "",
+    "7": "Jul",
+    "8": "",
+    "9": "Sep",
+    "10": "",
+    "11": "Nov",
+    "12": ""
+};
+var svgLeg = d3.select("#legMain").append("svg")
+        .attr("width", 600)
+        .attr("height", 450);
+
 function ready(error, canada, usa, ocean) {
     console.log('test')
-
-    var sliderWidth = 200,
-        sliderHeight = 30;
-
-    var margin = {
-        top: 10,
-        right: 10,
-        bottom: 10,
-        left: 10
-    }
-
-    var current = {
-            "month": 1
-        },
-        maxValue = 12,
-        moving;
-
-
-    var sliderContainer = d3.select("#slider").append("svg")
-        .attr("width", sliderWidth + margin.left + margin.right + 10)
-        .attr("height", sliderHeight + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + (margin.top) + ")");
+ 
 
     var x = d3.scale.linear()
         .domain([1, 12])
         .range([0, sliderWidth])
         .clamp(true);
 
-    var brushToMonth = d3.scale.quantile()
-        .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
-        .range([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-
+    
     var brush = d3.svg.brush()
         .x(x)
         .extent([current.month, current.month])
         .on("brush", brushed);
 
-    var xTicks = {
-        "1": "Jan",
-        "2": "",
-        "3": "Mar",
-        "4": "",
-        "5": "May",
-        "6": "",
-        "7": "Jul",
-        "8": "",
-        "9": "Sep",
-        "10": "",
-        "11": "Nov",
-        "12": ""
-    };
 
     var xAxis = d3.svg.axis()
         .scale(x)
@@ -105,7 +111,8 @@ function ready(error, canada, usa, ocean) {
     // first variable is used to center and scale map the viewport
     var bTopo = topojson.feature(canada, canada.objects.canada),
         topo = bTopo.features;
-    var usTopo = topojson.feature(usa, usa.objects.states);
+    var usTopo = topojson.feature(usa, usa.objects.counties);
+    var usaTopo = topojson.feature(usa, usa.objects.states);
     
     svg.selectAll("path")
         .data(topo)
@@ -128,6 +135,10 @@ function ready(error, canada, usa, ocean) {
 
     var featureUS = g.selectAll("path1")
         .data(usTopo.features)
+        .enter().append("path");
+
+    var featureUSA = g.selectAll("path1")
+        .data(usaTopo.features)
         .enter().append("path")
         .attr("class", "us");
 
@@ -139,9 +150,7 @@ function ready(error, canada, usa, ocean) {
     // console.log(current.month)
     climate_var = "tmax";
 
-    var svgLeg = d3.select("#legMain").append("svg")
-        .attr("width", 600)
-        .attr("height", 450);
+    
 
     drawMap(current.month, climate_var) //initialize with Jan and tmax
 
@@ -205,8 +214,18 @@ function ready(error, canada, usa, ocean) {
                 }
             });
 
+        featureUSA.attr("d", path);
+
         featureUS.attr("d", path)
-            .style("fill", "#ddd");
+            .style("fill", function(d) {
+                // console.log(d)
+                if (d.id == "02105" || d.id == "02100" || d.id == "02230" || d.id == "02110" || d.id == "02220" || d.id == "02195" || d.id == "02275" || d.id == "02198" || d.id == "02130" || d.id == "53055" ) {
+                    // console.log(d)
+                    return "none"
+                } else {
+                    return "#ddd";
+                }
+            });
 
         ocean.attr("d", path)
             .style("fill", "#a6cef5");
@@ -217,8 +236,6 @@ function ready(error, canada, usa, ocean) {
         var point = map.latLngToLayerPoint(new L.LatLng(y, x));
         this.stream.point(point.x, point.y);
     };
-
-    var wmsL;
 
 
     function drawMap(date, climate_var) {
@@ -381,23 +398,13 @@ function ready(error, canada, usa, ocean) {
 
     }
 
+    makeChart();
+
 }
 
+var counter = 0, svg, xAxis,yAxis,x;
 
-//setup graph but hide it.
-
-var counter = 0;
-
-var chartData = [];
-
-for (i = 0; i < 0; i++) {
-    chartData.push({
-        x: '1985-' + i + '-15',
-        y: i
-    })
-}
-
-var margin = {
+margin = {
         top: 20,
         right: 20,
         bottom: 30,
@@ -408,66 +415,82 @@ var margin = {
 
 var parseDate = d3.time.format("%Y-%m-%d").parse;
 
-chartData.forEach(function(d) {
-    d.x = parseDate(d.x);
-});
 
-var x = d3.time.scale()
-    .domain([d3.extent(chartData, function(d) {
-        return d.x;
-    })])
-    .range([0, widthG]);
+function makeChart() {
 
-var y = d3.scale.linear()
-    .range([heightG, 0]);
+    //setup graph but hide it.
 
-var xAxis = d3.svg.axis()
-    .scale(x)
-    .ticks(11)
-    .orient("bottom")
-    .tickFormat(d3.time.format("%b"));
+    var chartData = [];
 
-var yAxis = d3.svg.axis()
-    .scale(y)
-    .ticks(5,",.1")
-    .orient("left");
+    for (i = 0; i < 0; i++) {
+        chartData.push({
+            x: '1985-' + i + '-15',
+            y: i
+        })
+    }
 
-var line = d3.svg.line()
-    .interpolate("linear")
-    .x(function(d) {
-        return x(d.x);
-    })
-    .y(function(d) {
-        return y(d.y);
+
+    chartData.forEach(function(d) {
+        d.x = parseDate(d.x);
     });
 
-var svg = d3.select("#chart").append("svg")
-    .attr("width", widthG + 100 + margin.left + margin.right)
-    .attr("height", heightG + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    x = d3.time.scale()
+        .domain([d3.extent(chartData, function(d) {
+            return d.x;
+        })])
+        .range([0, widthG]);
+
+    var y = d3.scale.linear()
+        .range([heightG, 0]);
+
+    xAxis = d3.svg.axis()
+        .scale(x)
+        .ticks(11)
+        .orient("bottom")
+        .tickFormat(d3.time.format("%b"));
+
+    yAxis = d3.svg.axis()
+        .scale(y)
+        .ticks(5,",.1")
+        .orient("left");
+
+    var line = d3.svg.line()
+        .interpolate("linear")
+        .x(function(d) {
+            return x(d.x);
+        })
+        .y(function(d) {
+            return y(d.y);
+        });
+
+    svg = d3.select("#chart").append("svg")
+        .attr("width", widthG + 100 + margin.left + margin.right)
+        .attr("height", heightG + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-y.domain([-25, 30]);
+    y.domain([-25, 30]);
 
-svg.append("g") //x axis group
-    .attr("class", "x axisC")
-    .attr("transform", "translate(0," + heightG + ")")
-    .call(xAxis);
+    svg.append("g") //x axis group
+        .attr("class", "x axisC")
+        .attr("transform", "translate(0," + heightG + ")")
+        .call(xAxis);
 
-svg.append("path")
-    .attr("class", "line")
-    .attr("d", line(chartData));
+    svg.append("path")
+        .attr("class", "line")
+        .attr("d", line(chartData));
 
-svg.selectAll("circle")
-    .data(chartData)
-    .enter()
-    .append("circle")
-    .attr("r", 3.5)
-    .attr("cx", function(d) {
-        return x(d.x);
-    })
-    .attr("cy", function(d) {
-        return y(d.y);
-    })
-    .style("fill", "rgb(214,39,40)");
+    svg.selectAll("circle")
+        .data(chartData)
+        .enter()
+        .append("circle")
+        .attr("r", 3.5)
+        .attr("cx", function(d) {
+            return x(d.x);
+        })
+        .attr("cy", function(d) {
+            return y(d.y);
+        })
+        .style("fill", "rgb(214,39,40)");
+}

@@ -218,6 +218,16 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .duration(1000)
                 .call(yAxis);
 
+            function mousemove() {
+                var x0 = x.invert(d3.mouse(this)[0]),
+                    i = bisectDate(chartData, x0, 1),
+                    d0 = chartData[i - 1],
+                    d1 = chartData[i],
+                    dd = x0 - d0.x > d1.x - x0 ? d1 : d0;
+                focus.attr("transform", "translate(" + x(dd.x) + "," + y(dd.y) + ")");
+                focus.select("text").text(dd.y.toFixed(2));
+            }
+
             // mouseover stuff
             var focus = svg.append("g")
                 .attr("class", "focus")
