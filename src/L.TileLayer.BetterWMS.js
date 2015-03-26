@@ -44,7 +44,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 service: 'WMS',
                 srs: 'EPSG:4326',
                 // time: this.wmsParams.time,
-                time: ["1985-1-15", "1985-2-15", "1985-3-15", "1985-4-15", "1985-5-15", "1985-6-15", "1985-7-15", "1985-8-15", "1985-9-15", "1985-10-15", "1985-11-15", "1985-12-15"],
+                time: ["1985-1-15", "1985-2-15", "1985-3-15", "1985-4-15", "1985-5-15", "1985-6-15", "1985-7-15", "1985-8-15", "1985-9-15", "1985-10-15", "1985-11-15", "1985-12-15","1985-6-30"],
                 styles: this.wmsParams.styles,
                 transparent: this.wmsParams.transparent,
                 version: this.wmsParams.version,
@@ -73,7 +73,8 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
     showGetFeatureInfo: function(err, latlng, content) {
 
-        if ((content.getElementsByTagName('value')[0].innerHTML) != 'none') {
+        //only try and show values for PRSIM locations (avoid NaNs)
+        if (content.getElementsByTagName('value')[0].childNodes[0].nodeValue > -50 && content.getElementsByTagName('value')[0].childNodes[0].nodeValue <30000) {
             // make chart text visible but only add once
             while (counter < 1) {
 
@@ -87,6 +88,8 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
             chartData = [];
             // debugger;
+            var annual = Number(content.getElementsByTagName('value')[12].childNodes[0].nodeValue);
+
             // loop though time / values and create object
             for (i = 0; i < 12; i++) {
                 chartData.push({
@@ -95,6 +98,8 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
                 })
             }
+
+            var dataSum = d3.sum(chartData, function(d) { return d.y; }); 
 
             // populate graph
             var parseDate = d3.time.format("%Y-%m-%d").parse,
@@ -137,11 +142,22 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                             return y(d.y);
                         });
 
+                    d3.select(".year").remove()
+
+                    svg.append("text")
+                        .attr("class", "year label")
+                        .style("text-anchor", "end")
+                        .attr("y", height /2.7)
+                        .attr("x", width/2.5)
+                        .text(annual.toFixed(0) + " mm");
+
+
                     break;
 
                 case 'tmax':
                 case 'tmin':
                     d3.select("#temp").remove()
+
                     svg.append("text")
                         .attr("transform", "rotate(-90)")
                         .attr("y", 6)
@@ -162,6 +178,16 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                             return y(d.y);
                         });
 
+                    var meanLine = d3.svg.line()
+                        .x(function(d) {
+                            return x(d.x);
+                        })
+                        .y(function(d) {
+                            console.log(dataSum/12)
+                            return y(dataSum/12);
+                        });
+
+                    
                     break;
 
             }
@@ -206,6 +232,43 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .transition()
                 .duration(1000)
                 .attr("d", line(chartData));
+
+            
+
+            if (climate_var !== "pr"){
+
+            d3.select(".year").remove()
+
+                    svg.append("text")
+                        .attr("class", "year label")
+                        .style("text-anchor", "end")
+                        .attr("y", height /2.7)
+                        .attr("x", width/2.5)
+                        .text(annual.toFixed(2) + " \xB0C");
+
+            AvgLine.selectAll("path")
+                .transition()
+                .duration(1000)
+                .attr("d", meanLine(chartData));
+
+            // AvgLine.append("text")
+            //           .datum(function(d) { 
+            //             console.log(d)
+            //             return {name: d.name, value: d.values[d.values.length - 1]}; })
+            //           .attr("transform", function(d) { 
+            //             console.log(d)
+            //             return "translate(" + x(d.x) + "," + y(d.y) + ")"; })
+            //           .attr("x", 3)
+            //           .attr("dy", ".35em")
+            //           .text("annual");
+
+                
+                AvgLine.style("visibility", "visible");
+
+            } else {
+                AvgLine.style("visibility", "hidden");
+                
+            }
 
 
             //Update X axis
@@ -281,7 +344,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                     break;
             }
 
-        };
+        }
 
     }
 

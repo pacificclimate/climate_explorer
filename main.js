@@ -76,12 +76,182 @@ var svgLeg = d3.select("#legMain").append("svg")
     .attr("width", 600)
     .attr("height", 450);
 
-var range;
+
+function projectPoint(x, y) {
+    "use strict";
+    var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+    this.stream.point(point.x, point.y);
+}
+
+function drawMap(date, climate_var) {
+    "use strict";
+
+    console.log('adding this allows map to load in safari...')
+    var y = d3.scale.log()
+        .range([150, 0]);
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .ticks(5, ",.1")
+        .orient("right");
+
+    switch (climate_var) {
+
+    case 'pr':
+
+        $.ajax({
+            url: "http://prism.noip.me:82/toolsPCIC/dataportal/bc_prism/metadata.json?request=GetMinMaxWithUnits",
+            data: "&id=pr_monClim_PRISM_historical_run1_197101-200012&var=pr",
+            success: function (data) {
+
+                svgLeg.selectAll("image").remove();
+                svgLeg.selectAll("g").remove();
+
+                if (wmsL !== undefined) {
+                    map.removeLayer(wmsL);
+                }
+
+                ymax = data.max / 4;
+                ymin = data.min;
+                y.domain([ymin, ymax]);
+
+                svgLeg.append("g")
+                    .attr("class", "y axisC colourY")
+                    .call(yAxis)
+                    .attr("transform", "translate(90,30)")
+                    .append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 46)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text("Precipitation (mm)");
+
+
+                svgLeg.append("image")
+                    .attr("clip-path", "url(#clip)")
+                    .attr("xlink:href", "http://tools.pacificclimate.org/ncWMS-PCIC/wms?REQUEST=GetLegendGraphic&COLORBARONLY=true&WIDTH=1&HEIGHT=13&PALETTE=occam_inv&NUMCOLORBANDS=254&COLORSCALERANGE=" + ymin + "," + ymax + '"')
+                    .attr("width", 150)
+                    .attr("height", 150)
+                    .attr("transform", "translate(10,30)");
+
+                wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
+                    layers: climate_var + '_monClim_PRISM_historical_run1_197101-200012/' + climate_var,
+                    format: 'image/png',
+                    maxZoom: 14,
+                    minZoom: 0,
+                    transparent: 'true',
+                    month: date,
+                    time: '1985-' + date + '-15',
+                    styles: 'boxfill/occam_inv',
+                    COLORSCALERANGE: ymin + "," + ymax,
+                    logscale: true,
+                    numcolorbands: 254,
+                    version: '1.1.1',
+                    continuousWorld: true
+                });
+                // console.log(wmsL)
+
+                wmsL.addTo(map);
+
+            }
+        });
+
+        break;
+
+    case 'tmax':
+    case 'tmin':
+
+        y = d3.scale.linear()
+            .range([150, 0]);
+
+        yAxis = d3.svg.axis()
+            .scale(y)
+            .ticks(5)
+            .orient("right");
+
+        $.ajax({
+            url: "http://prism.noip.me:82/toolsPCIC/dataportal/bc_prism/metadata.json?request=GetMinMaxWithUnits",
+            data: "&id=tmax_monClim_PRISM_historical_run1_197101-200012&var=tmax",
+            success: function (data) {
+
+                svgLeg.selectAll("image").remove();
+                svgLeg.selectAll("g").remove();
+
+                if (wmsL !== undefined) {
+                    map.removeLayer(wmsL);
+                }
+
+                ymax = data.max;
+                ymin = data.min - 5; //expand range to capture tmin values without having to do another ajax request. 
+
+                y.domain([ymin, ymax]);
+
+                svgLeg.append("g")
+                    .attr("class", "y axisC colourY")
+                    .call(yAxis)
+                    .attr("transform", "translate(90,30)")
+                    .append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 36)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text("Temperature (\xB0C)");
+
+                svgLeg.append("image")
+                    .attr("clip-path", "url(#clip)")
+                    .attr("xlink:href", "http://tools.pacificclimate.org/ncWMS-PCIC/wms?REQUEST=GetLegendGraphic&COLORBARONLY=true&WIDTH=1&HEIGHT=13&PALETTE=boxfill/rainbow'&NUMCOLORBANDS=254&COLORSCALERANGE=" + ymin + "," + ymax + '"')
+                    .attr("width", 150)
+                    .attr("height", 150)
+                    .attr("transform", "translate(10,30)");
+
+                wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
+                    layers: climate_var + '_monClim_PRISM_historical_run1_197101-200012/' + climate_var,
+                    format: 'image/png',
+                    maxZoom: 14,
+                    minZoom: 0,
+                    transparent: 'true',
+                    month: date,
+                    time: '1985-' + date + '-15',
+                    styles: 'boxfill/rainbow',
+                    COLORSCALERANGE: ymin + "," + ymax,
+                    logscale: false,
+                    numcolorbands: 254,
+                    version: '1.1.1',
+                    continuousWorld: true
+                });
+
+                wmsL.addTo(map);
+            }
+        });
+
+        break;
+    }
+
+}
 
 function ready(error, canada, usa, ocean) {
     "use strict";
-    // console.log('test')
 
+    // if (error) return console.error(error);
+
+    function brushed() {
+
+        var value = brush.extent()[0];
+
+        if (d3.event.sourceEvent) {
+
+            value = Math.round(x.invert(d3.mouse(this)[0]));
+            brush.extent([value, value]);
+        }
+        handle.attr("cx", x(value));
+        var brushDate = brushToMonth(value);
+        current.month = brushDate;
+        map.removeLayer(wmsL); // remove layer to prevent them from piling up.
+
+
+        drawMap(brushDate, climate_var);
+
+    }
 
     var x = d3.scale.linear()
         .domain([1, 12])
@@ -112,7 +282,7 @@ function ready(error, canada, usa, ocean) {
     var bTopo = topojson.feature(canada, canada.objects.canada),
         topo = bTopo.features;
     var usTopo = topojson.feature(usa, usa.objects.counties);
-    var usaTopo = topojson.feature(usa, usa.objects.states);
+    // var usaTopo = topojson.feature(usa, usa.objects.states);
 
     svg.selectAll("path")
         .data(topo)
@@ -137,10 +307,10 @@ function ready(error, canada, usa, ocean) {
         .data(usTopo.features)
         .enter().append("path");
 
-    var featureUSA = g.selectAll("path1")
-        .data(usaTopo.features)
-        .enter().append("path")
-        .attr("class", "us");
+    // var featureUSA = g.selectAll("path1")
+    //     .data(usaTopo.features)
+    //     .enter().append("path")
+    //     .attr("class", "us");
 
     ocean = g.selectAll("path2") // only using to mask tiles that spill over boarder. Could clip tiles instead...
         .data(pacific.features)
@@ -172,7 +342,7 @@ function ready(error, canada, usa, ocean) {
         })
         .attr("class", "halo");
 
-    sliderContainer.call(xAxis)
+    sliderContainer.call(xAxis);
 
     var slider = sliderContainer.append("g")
         .attr("class", "g-slider")
@@ -209,20 +379,18 @@ function ready(error, canada, usa, ocean) {
                 // console.log(d)
                 if (d.properties.province === "British Columbia") {
                     return "none";
-                } else {
-                    return "#ddd";
                 }
+                return "#ddd";
             });
 
         // featureUSA.attr("d", path); //state borders
 
         featureUS.attr("d", path) //make these counties (Alaska panhandle and San Juan Islands) visible. 
             .style("fill", function (d) {
-                if (d.id == "02105" || d.id == "02100" || d.id == "02230" || d.id == "02110" || d.id == "02220" || d.id == "02195" || d.id == "02275" || d.id == "02198" || d.id == "02130" || d.id == "53055") {
+                if (d.id === "02105" || d.id === "02100" || d.id === "02230" || d.id === "02110" || d.id === "02220" || d.id === "02195" || d.id === "02275" || d.id === "02198" || d.id === "02130" || d.id === "53055") {
                     return "none";
-                } else {
-                    return "#ddd";
                 }
+                return "#ddd";
             });
 
         ocean.attr("d", path)
@@ -230,228 +398,52 @@ function ready(error, canada, usa, ocean) {
 
     }
 
-    function projectPoint(x, y) {
-        var point = map.latLngToLayerPoint(new L.LatLng(y, x));
-        this.stream.point(point.x, point.y);
-    };
-
-
-    function drawMap(date, climate_var) {
-
-        switch (climate_var) {
-
-        case 'pr':
-
-            var y = d3.scale.log()
-                .range([150, 0]);
-
-            var yAxis = d3.svg.axis()
-                .scale(y)
-                .ticks(5, ",.1")
-                .orient("right");
-
-            $.ajax({
-                url: "http://prism.noip.me:82/toolsPCIC/dataportal/bc_prism/metadata.json?request=GetMinMaxWithUnits",
-                data: "&id=pr_monClim_PRISM_historical_run1_197101-200012&var=pr",
-                success: function (data) {
-
-                    svgLeg.selectAll("image").remove()
-                    svgLeg.selectAll("g").remove()
-
-                    if (wmsL !== undefined) {
-                        map.removeLayer(wmsL)
-                    }
-
-                    ymax = data.max / 4;
-                    ymin = data.min;
-                    y.domain([ymin, ymax]);
-
-                    svgLeg.append("g")
-                        .attr("class", "y axisC colourY")
-                        .call(yAxis)
-                        .attr("transform", "translate(90,30)")
-                        .append("text")
-                        .attr("transform", "rotate(-90)")
-                        .attr("y", 46)
-                        .attr("dy", ".71em")
-                        .style("text-anchor", "end")
-                        .text("Precipitation (mm)");
-
-
-                    svgLeg.append("image")
-                        .attr("clip-path", "url(#clip)")
-                        .attr("xlink:href", "http://tools.pacificclimate.org/ncWMS-PCIC/wms?REQUEST=GetLegendGraphic&COLORBARONLY=true&WIDTH=1&HEIGHT=13&PALETTE=occam_inv&NUMCOLORBANDS=254&COLORSCALERANGE=" + ymin + "," + ymax + '"')
-                        .attr("width", 150)
-                        .attr("height", 150)
-                        .attr("transform", "translate(10,30)");
-
-                    wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
-                        layers: climate_var + '_monClim_PRISM_historical_run1_197101-200012/' + climate_var,
-                        format: 'image/png',
-                        maxZoom: 14,
-                        minZoom: 0,
-                        transparent: 'true',
-                        month: date,
-                        time: '1985-' + date + '-15',
-                        styles: 'boxfill/occam_inv',
-                        COLORSCALERANGE: ymin + "," + ymax,
-                        logscale: true,
-                        numcolorbands: 254,
-                        version: '1.1.1',
-                        continuousWorld: true
-                    });
-                    // console.log(wmsL)
-
-                    wmsL.addTo(map)
-
-                }
-            });
-
-            break;
-
-        case 'tmax':
-        case 'tmin':
-
-            var y = d3.scale.linear()
-                .range([150, 0]);
-
-            var yAxis = d3.svg.axis()
-                .scale(y)
-                .ticks(5)
-                .orient("right");
-
-            $.ajax({
-                url: "http://prism.noip.me:82/toolsPCIC/dataportal/bc_prism/metadata.json?request=GetMinMaxWithUnits",
-                data: "&id=tmax_monClim_PRISM_historical_run1_197101-200012&var=tmax",
-                success: function (data) {
-
-                    svgLeg.selectAll("image").remove()
-                    svgLeg.selectAll("g").remove()
-
-                    if (wmsL !== undefined) {
-                        map.removeLayer(wmsL)
-                    }
-
-                    ymax = data.max;
-                    ymin = data.min - 5; //expand range to capture tmin values without having to do another ajax request. 
-
-                    y.domain([ymin, ymax]);
-
-                    svgLeg.append("g")
-                        .attr("class", "y axisC colourY")
-                        .call(yAxis)
-                        .attr("transform", "translate(90,30)")
-                        .append("text")
-                        .attr("transform", "rotate(-90)")
-                        .attr("y", 36)
-                        .attr("dy", ".71em")
-                        .style("text-anchor", "end")
-                        .text("Temperature (\xB0C)");
-
-                    svgLeg.append("image")
-                        .attr("clip-path", "url(#clip)")
-                        .attr("xlink:href", "http://tools.pacificclimate.org/ncWMS-PCIC/wms?REQUEST=GetLegendGraphic&COLORBARONLY=true&WIDTH=1&HEIGHT=13&PALETTE=boxfill/rainbow'&NUMCOLORBANDS=254&COLORSCALERANGE=" + ymin + "," + ymax + '"')
-                        .attr("width", 150)
-                        .attr("height", 150)
-                        .attr("transform", "translate(10,30)");
-                    console.log(ymin)
-                    wmsL = L.tileLayer.betterWms("http://prism.noip.me:82/ncWMS/wms", {
-                        layers: climate_var + '_monClim_PRISM_historical_run1_197101-200012/' + climate_var,
-                        format: 'image/png',
-                        maxZoom: 14,
-                        minZoom: 0,
-                        transparent: 'true',
-                        month: date,
-                        time: '1985-' + date + '-15',
-                        styles: 'boxfill/rainbow',
-                        COLORSCALERANGE: ymin + "," + ymax,
-                        logscale: false,
-                        numcolorbands: 254,
-                        version: '1.1.1',
-                        continuousWorld: true
-                    });
-
-                    wmsL.addTo(map)
-                }
-            });
-
-            break;
-        }
-
-    };
-
 
     // trace selection
     $(document).ready(function () {
         $('.climate_var').on('change', function () {
             climate_var = $('.climate_var').val();
 
-            map.removeLayer(wmsL) // remove layer to prevent them from piling up.
+            map.removeLayer(wmsL); // remove layer to prevent them from piling up.
 
-            drawMap(current.month, climate_var)
+            drawMap(current.month, climate_var);
 
         });
 
     });
 
 
-    function brushed() {
-
-        var value = brush.extent()[0];
-
-        if (d3.event.sourceEvent) {
-
-            value = Math.round(x.invert(d3.mouse(this)[0]));
-            console.log(value)
-            brush.extent([value, value]);
-        }
-        handle.attr("cx", x(value));
-        var brushDate = brushToMonth(value);
-        console.log(brushDate)
-        current.month = brushDate;
-        map.removeLayer(wmsL) // remove layer to prevent them from piling up.
-
-
-        drawMap(brushDate, climate_var)
-
-    }
-
     makeChart();
 
 }
 
 var counter = 0,
-    svg, xAxis, yAxis, x;
+    svg,
+    AvgLine,
+    xAxis,
+    yAxis,
+    x;
 
 margin = {
-        top: 20,
-        right: 20,
-        bottom: 30,
-        left: 50
-    },
-    widthG = 760 / 2 - margin.left - margin.right,
+    top: 20,
+    right: 20,
+    bottom: 30,
+    left: 50
+};
+
+var widthG = 760 / 2 - margin.left - margin.right,
     heightG = 250 - margin.top - margin.bottom;
 
 var parseDate = d3.time.format("%Y-%m-%d").parse;
 
 
 function makeChart() {
+    "use strict";
 
     //setup graph but hide it.
 
     var chartData = [];
 
-    for (i = 0; i < 0; i++) {
-        chartData.push({
-            x: '1985-' + i + '-15',
-            y: i
-        })
-    }
-
-
-    chartData.forEach(function (d) {
-        d.x = parseDate(d.x);
-    });
 
     x = d3.time.scale()
         .domain([d3.extent(chartData, function (d) {
@@ -482,6 +474,16 @@ function makeChart() {
             return y(d.y);
         });
 
+    var meanLine = d3.svg.line()
+        .x(function(d) {
+            return x(d.x);
+        })
+        .y(function(d) {
+            return y(d.y);
+        });
+
+                    
+
     svg = d3.select("#chart").append("svg")
         .attr("width", widthG + 100 + margin.left + margin.right)
         .attr("height", heightG + margin.top + margin.bottom)
@@ -499,6 +501,12 @@ function makeChart() {
     svg.append("path")
         .attr("class", "line")
         .attr("d", line(chartData));
+
+    AvgLine = svg.append("g");
+
+    AvgLine.append("path")
+        .attr("class", "line1")
+        .attr("d", meanLine(chartData));
 
     svg.selectAll("circle")
         .data(chartData)
