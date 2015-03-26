@@ -251,17 +251,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .duration(1000)
                 .attr("d", meanLine(chartData));
 
-            // AvgLine.append("text")
-            //           .datum(function(d) { 
-            //             console.log(d)
-            //             return {name: d.name, value: d.values[d.values.length - 1]}; })
-            //           .attr("transform", function(d) { 
-            //             console.log(d)
-            //             return "translate(" + x(d.x) + "," + y(d.y) + ")"; })
-            //           .attr("x", 3)
-            //           .attr("dy", ".35em")
-            //           .text("annual");
-
+ 
                 
                 AvgLine.style("visibility", "visible");
 
@@ -324,23 +314,43 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
             }
 
             switch (climate_var) {
+
                 case 'tmax':
                 case 'tmin':
+                if (this.wmsParams.time === "1985-6-30") {
                     L.popup({
+                            maxWidth: 800
+                        })
+                        .setLatLng(latlng)
+                        .setContent(Number(content.getElementsByTagName('value')[12].childNodes[0].nodeValue).toFixed(2) + " \xB0C")
+                        .openOn(map);
+                    } else {
+                        L.popup({
                             maxWidth: 800
                         })
                         .setLatLng(latlng)
                         .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].childNodes[0].nodeValue).toFixed(2) + " \xB0C")
                         .openOn(map);
+                    }
                     break;
 
                 case 'pr':
+                if (this.wmsParams.time === "1985-6-30") {
                     L.popup({
+                            maxWidth: 800
+                        })
+                        .setLatLng(latlng)
+                        .setContent(Number(content.getElementsByTagName('value')[12].childNodes[0].nodeValue).toFixed(2) + " mm")
+                        .openOn(map);
+                    } else {
+                        L.popup({
                             maxWidth: 800
                         })
                         .setLatLng(latlng)
                         .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].childNodes[0].nodeValue).toFixed(2) + " mm")
                         .openOn(map);
+                    }
+
                     break;
             }
 

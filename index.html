@@ -6,6 +6,7 @@
 <style>
 @import url(//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css);
 
+
 #map {
     width: 760px;
     height: 500px;
@@ -37,10 +38,6 @@ svg {
 
 }
 
-.tick line {
-    stroke: #aaa;
-    shape-rendering: crispEdges;
-}
 
 .axis .halo {
     fill: none;
@@ -68,9 +65,19 @@ svg {
 #slider {
     position: absolute;
     left: 20px;
-    top: 330px;
+    top: 530px;
     font-size: 0.8em;
 }
+.tick line {
+    stroke: #aaa;
+    shape-rendering: crispEdges;
+}
+
+.tick-special.tick-ann {
+  fill: steelblue;
+  font-weight: bold;
+}
+
 
 .line {
   fill: none;

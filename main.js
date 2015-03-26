@@ -22,6 +22,12 @@ var map = new L.Map('map', {
 
 map.setView([54, -122.9364], 1);
 
+// var playButton = d3.select("#g-play-button");
+
+// var day;
+
+// playButton
+//         .on("click", annual);
 
 queue()
     .defer(d3.json, "canada.json")
@@ -31,9 +37,9 @@ queue()
 
 var e, ymin, ymax, climate_var;
 
-var sliderWidth = 200,
+var sliderWidth = 250,
     sliderHeight = 30;
-var wmsL;
+var wmsL, day;
 
 var margin = {
     top: 10,
@@ -45,7 +51,7 @@ var margin = {
 var current = {
         "month": 1
     },
-    maxValue = 12,
+    maxValue = 13,
     moving;
 
 var sliderContainer = d3.select("#slider").append("svg")
@@ -55,8 +61,8 @@ var sliderContainer = d3.select("#slider").append("svg")
     .attr("transform", "translate(" + margin.left + "," + (margin.top) + ")");
 
 var brushToMonth = d3.scale.quantile()
-    .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
-    .range([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    .domain([1, 13])
+    .range([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
 
 var xTicks = {
     "1": "Jan",
@@ -70,8 +76,11 @@ var xTicks = {
     "9": "Sep",
     "10": "",
     "11": "Nov",
-    "12": ""
+    "12": "",
+    "13":"Ann"
 };
+
+
 var svgLeg = d3.select("#legMain").append("svg")
     .attr("width", 600)
     .attr("height", 450);
@@ -83,8 +92,16 @@ function projectPoint(x, y) {
     this.stream.point(point.x, point.y);
 }
 
-function drawMap(date, climate_var) {
+function drawMap(date, climate_var, day) {
     "use strict";
+    // console.log(date)
+    if (day === undefined) {
+          day = '15';
+    } 
+    if (date === 13) { //annual values
+        date = 6,
+        day = 30
+        } 
 
     console.log('adding this allows map to load in safari...')
     var y = d3.scale.log()
@@ -110,8 +127,10 @@ function drawMap(date, climate_var) {
                 if (wmsL !== undefined) {
                     map.removeLayer(wmsL);
                 }
-
                 ymax = data.max / 4;
+
+                if (day === 30) ymax = data.max;
+                
                 ymin = data.min;
                 y.domain([ymin, ymax]);
 
@@ -141,7 +160,7 @@ function drawMap(date, climate_var) {
                     minZoom: 0,
                     transparent: 'true',
                     month: date,
-                    time: '1985-' + date + '-15',
+                    time: '1985-' + date + '-'+day,
                     styles: 'boxfill/occam_inv',
                     COLORSCALERANGE: ymin + "," + ymax,
                     logscale: true,
@@ -149,6 +168,8 @@ function drawMap(date, climate_var) {
                     version: '1.1.1',
                     continuousWorld: true
                 });
+
+                ymax = data.max / 4;
                 // console.log(wmsL)
 
                 wmsL.addTo(map);
@@ -211,7 +232,7 @@ function drawMap(date, climate_var) {
                     minZoom: 0,
                     transparent: 'true',
                     month: date,
-                    time: '1985-' + date + '-15',
+                    time: '1985-' + date + '-'+day,
                     styles: 'boxfill/rainbow',
                     COLORSCALERANGE: ymin + "," + ymax,
                     logscale: false,
@@ -228,6 +249,12 @@ function drawMap(date, climate_var) {
     }
 
 }
+
+// function annual() {
+//     day = "30";
+//     current.month = "6";
+//     drawMap(current.month, climate_var,day);
+// }
 
 function ready(error, canada, usa, ocean) {
     "use strict";
@@ -254,7 +281,7 @@ function ready(error, canada, usa, ocean) {
     }
 
     var x = d3.scale.linear()
-        .domain([1, 12])
+        .domain([1, 13])
         .range([0, sliderWidth])
         .clamp(true);
 
@@ -266,12 +293,13 @@ function ready(error, canada, usa, ocean) {
     var xAxis = d3.svg.axis()
         .scale(x)
         .orient("button")
-        .ticks(12)
+        .ticks(13)
         .tickFormat(function (d) {
             return xTicks[d];
         })
         .tickSize(10, 0)
         .tickPadding(0);
+
 
     var svg = d3.select(map.getPanes().overlayPane).append("svg"),
         g = svg.append("g").attr("class", "leaflet-zoom-hide");
@@ -342,6 +370,14 @@ function ready(error, canada, usa, ocean) {
         })
         .attr("class", "halo");
 
+
+    var tick = sliderContainer.selectAll(".tick")
+      .each(function() { this.parentNode.appendChild(this); });
+
+   
+    tick.filter(function(d) { return d in xTicks; })
+      .attr("class", function(d) { return "tick tick-special tick-" + xTicks[d].toLowerCase(); });
+
     sliderContainer.call(xAxis);
 
     var slider = sliderContainer.append("g")
@@ -405,8 +441,8 @@ function ready(error, canada, usa, ocean) {
             climate_var = $('.climate_var').val();
 
             map.removeLayer(wmsL); // remove layer to prevent them from piling up.
-
-            drawMap(current.month, climate_var);
+            console.log(day)
+            drawMap(current.month, climate_var, day);
 
         });
 
