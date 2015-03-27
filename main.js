@@ -99,6 +99,7 @@ function ready(error, canada, usa, ocean) {
         .attr("id", "land");
 
     function reset() {
+        console.log('adding this make things work in safari...')
 
         var bounds = path.bounds(usTopo), //Use US for the projection bounds
             topLeft = bounds[0],
