@@ -1,21 +1,21 @@
 // modified from https://gist.github.com/rclark/6908938
 L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
-    onAdd: function(map) {
+    onAdd: function (map) {
         // Triggered when the layer is added to a map.
         //   Register a click listener, then do all the upstream WMS things
         L.TileLayer.WMS.prototype.onAdd.call(this, map);
         map.on('click', this.getFeatureInfo, this);
     },
 
-    onRemove: function(map) {
+    onRemove: function (map) {
         // Triggered when the layer is removed from a map.
         //   Unregister a click listener, then do all the upstream WMS things
         L.TileLayer.WMS.prototype.onRemove.call(this, map);
         map.off('click', this.getFeatureInfo, this);
     },
 
-    getFeatureInfo: function(evt) {
+    getFeatureInfo: function (evt) {
 
         // Make an AJAX request to the server 
         var url = this.getFeatureInfoUrl(evt.latlng),
@@ -24,17 +24,17 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
             url: url,
             type: 'GET',
             crossDomain: true, // enable this
-            success: function(data, status, xhr) {
+            success: function (data, status, xhr) {
                 var err = typeof data === 'string' ? null : data;
                 showResults(err, evt.latlng, data);
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 showResults(error);
             }
         });
     },
 
-    getFeatureInfoUrl: function(latlng) {
+    getFeatureInfoUrl: function (latlng) {
         var point = [];
         // Construct a GetFeatureInfo request URL given a point
         point = this._map.latLngToContainerPoint(latlng, this._map.getZoom()),
@@ -44,7 +44,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 service: 'WMS',
                 srs: 'EPSG:4326',
                 // time: this.wmsParams.time,
-                time: ["1985-1-15", "1985-2-15", "1985-3-15", "1985-4-15", "1985-5-15", "1985-6-15", "1985-7-15", "1985-8-15", "1985-9-15", "1985-10-15", "1985-11-15", "1985-12-15","1985-6-30"],
+                time: ["1985-1-15", "1985-2-15", "1985-3-15", "1985-4-15", "1985-5-15", "1985-6-15", "1985-7-15", "1985-8-15", "1985-9-15", "1985-10-15", "1985-11-15", "1985-12-15", "1985-6-30"],
                 styles: this.wmsParams.styles,
                 transparent: this.wmsParams.transparent,
                 version: this.wmsParams.version,
@@ -71,10 +71,10 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
         return this._url + L.Util.getParamString(params, this._url, true);
     },
 
-    showGetFeatureInfo: function(err, latlng, content) {
+    showGetFeatureInfo: function (err, latlng, content) {
 
         //only try and show values for PRSIM locations (avoid NaNs)
-        if (content.getElementsByTagName('value')[0].childNodes[0].nodeValue > -50 && content.getElementsByTagName('value')[0].childNodes[0].nodeValue <30000) {
+        if (content.getElementsByTagName('value')[0].childNodes[0].nodeValue > -50 && content.getElementsByTagName('value')[0].childNodes[0].nodeValue < 30000) {
             // make chart text visible but only add once
             while (counter < 1) {
 
@@ -93,102 +93,105 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
             // loop though time / values and create object
             for (i = 0; i < 12; i++) {
                 chartData.push({
-                    x: content.getElementsByTagName('time')[i].childNodes[0].nodeValue.substr(0,10),
+                    x: content.getElementsByTagName('time')[i].childNodes[0].nodeValue.substr(0, 10),
                     y: Number(content.getElementsByTagName('value')[i].childNodes[0].nodeValue)
 
                 })
             }
 
-            var dataSum = d3.sum(chartData, function(d) { return d.y; }); 
+            var dataSum = d3.sum(chartData, function (d) {
+                return d.y;
+            });
 
             // populate graph
             var parseDate = d3.time.format("%Y-%m-%d").parse,
-                bisectDate = d3.bisector(function(d) {
+                bisectDate = d3.bisector(function (d) {
                     return d.x;
                 }).left;
 
-            chartData.forEach(function(d) {
+            chartData.forEach(function (d) {
                 d.x = parseDate(d.x);
 
             });
 
 
-            x.domain(d3.extent(chartData, function(d) {
+            x.domain(d3.extent(chartData, function (d) {
                 return d3.time.month(d.x);
             }));
 
             x.nice(d3.time.month); //needed to show first month on x-axis
 
             switch (climate_var) {
-                case 'pr':
-                    d3.select("#temp").remove()
-                    svg.append("text")
-                        .attr("transform", "rotate(-90)")
-                        .attr("y", 6)
-                        .attr("dy", ".71em")
-                        .style("text-anchor", "end")
-                        .text("Precipitation (mm)")
-                        .attr("id", 'temp');
+            case 'pr':
+                d3.select("#temp").remove()
 
-                    var y = d3.scale.log()
-                        .range([heightG, 0]);
+                svg.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 6)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text("Precipitation (mm)")
+                    .attr("id", 'temp');
 
-                    var line = d3.svg.line()
-                        .interpolate("step")
-                        .x(function(d) {
-                            return x(d.x);
-                        })
-                        .y(function(d) {
-                            return y(d.y);
-                        });
+                var y = d3.scale.log()
+                    .range([heightG, 0]);
 
-                    d3.select(".year").remove()
+                var line = d3.svg.line()
+                    .interpolate("step")
+                    .x(function (d) {
+                        return x(d.x);
+                    })
+                    .y(function (d) {
+                        return y(d.y);
+                    });
 
-                    svg.append("text")
-                        .attr("class", "year label")
-                        .style("text-anchor", "end")
-                        .attr("y", height /2.7)
-                        .attr("x", width/2.5)
-                        .text(annual.toFixed(0) + " mm");
+                d3.select(".year").remove()
+
+                svg.append("text")
+                    .attr("class", "year label")
+                    .style("text-anchor", "end")
+                    .attr("y", height / 2.7)
+                    .attr("x", width / 2.5)
+                    .text(annual.toFixed(0) + " mm");
 
 
-                    break;
+                break;
 
-                case 'tmax':
-                case 'tmin':
-                    d3.select("#temp").remove()
+            case 'tmax':
+            case 'tmin':
+                d3.select("#temp").remove()
 
-                    svg.append("text")
-                        .attr("transform", "rotate(-90)")
-                        .attr("y", 6)
-                        .attr("dy", ".71em")
-                        .style("text-anchor", "end")
-                        .text("Temperature (\xB0 C)")
-                        .attr("id", 'temp');
+                svg.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 6)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text("Temperature (\xB0 C)")
+                    .attr("id", 'temp');
 
-                    var y = d3.scale.linear()
-                        .range([heightG, 0]);
+                var y = d3.scale.linear()
+                    .range([heightG, 0]);
 
-                    var line = d3.svg.line()
-                        .interpolate("basis")
-                        .x(function(d) {
-                            return x(d.x);
-                        })
-                        .y(function(d) {
-                            return y(d.y);
-                        });
+                var line = d3.svg.line()
+                    .interpolate("basis")
+                    .x(function (d) {
+                        return x(d.x);
+                    })
+                    .y(function (d) {
+                        return y(d.y);
+                    });
 
-                    var meanLine = d3.svg.line()
-                        .x(function(d) {
-                            return x(d.x);
-                        })
-                        .y(function(d) {
-                            console.log(dataSum/12)
-                            return y(dataSum/12);
-                        });
+                var meanLine = d3.svg.line()
+                    .x(function (d) {
+                        return x(d.x);
+                    })
+                    .y(function (d) {
+                        console.log(dataSum / 12)
+                        return y(dataSum / 12);
+                    });
 
-                    
-                    break;
+
+                break;
 
             }
 
@@ -206,10 +209,10 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .enter()
                 .append("circle")
                 .attr("r", 3.5)
-                .attr("cx", function(d) {
+                .attr("cx", function (d) {
                     return x(d.x);
                 })
-                .attr("cy", function(d) {
+                .attr("cy", function (d) {
                     return y(d.y);
                 })
                 .style("fill", "rgb(214,39,40)");
@@ -219,11 +222,11 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .transition()
                 .duration(1000)
                 .attr("r", 3.5)
-                .attr("cx", function(d) {
+                .attr("cx", function (d) {
                     // console.log(d)
                     return x(d.x);
                 })
-                .attr("cy", function(d) {
+                .attr("cy", function (d) {
                     return y(d.y);
                 })
                 .style("fill", "rgb(214,39,40)");
@@ -233,31 +236,31 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .duration(1000)
                 .attr("d", line(chartData));
 
-            
 
-            if (climate_var !== "pr"){
 
-            d3.select(".year").remove()
+            if (climate_var !== "pr") {
 
-                    svg.append("text")
-                        .attr("class", "year label")
-                        .style("text-anchor", "end")
-                        .attr("y", height /2.7)
-                        .attr("x", width/2.5)
-                        .text(annual.toFixed(2) + " \xB0C");
+                d3.select(".year").remove()
 
-            AvgLine.selectAll("path")
-                .transition()
-                .duration(1000)
-                .attr("d", meanLine(chartData));
+                svg.append("text")
+                    .attr("class", "year label")
+                    .style("text-anchor", "end")
+                    .attr("y", height / 2.7)
+                    .attr("x", width / 2.5)
+                    .text(annual.toFixed(2) + " \xB0C");
 
- 
-                
+                AvgLine.selectAll("path")
+                    .transition()
+                    .duration(1000)
+                    .attr("d", meanLine(chartData));
+
+
+
                 AvgLine.style("visibility", "visible");
 
             } else {
                 AvgLine.style("visibility", "hidden");
-                
+
             }
 
 
@@ -295,10 +298,10 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                 .attr("class", "overlay")
                 .attr("width", width)
                 .attr("height", height)
-                .on("mouseover", function() {
+                .on("mouseover", function () {
                     focus.style("display", null);
                 })
-                .on("mouseout", function() {
+                .on("mouseout", function () {
                     focus.style("display", "none");
                 })
                 .on("mousemove", mousemove);
@@ -315,8 +318,8 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
             switch (climate_var) {
 
-                case 'tmax':
-                case 'tmin':
+            case 'tmax':
+            case 'tmin':
                 if (this.wmsParams.time === "1985-6-30") {
                     L.popup({
                             maxWidth: 800
@@ -324,17 +327,17 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                         .setLatLng(latlng)
                         .setContent(Number(content.getElementsByTagName('value')[12].childNodes[0].nodeValue).toFixed(2) + " \xB0C")
                         .openOn(map);
-                    } else {
-                        L.popup({
+                } else {
+                    L.popup({
                             maxWidth: 800
                         })
                         .setLatLng(latlng)
                         .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].childNodes[0].nodeValue).toFixed(2) + " \xB0C")
                         .openOn(map);
-                    }
-                    break;
+                }
+                break;
 
-                case 'pr':
+            case 'pr':
                 if (this.wmsParams.time === "1985-6-30") {
                     L.popup({
                             maxWidth: 800
@@ -342,16 +345,16 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                         .setLatLng(latlng)
                         .setContent(Number(content.getElementsByTagName('value')[12].childNodes[0].nodeValue).toFixed(2) + " mm")
                         .openOn(map);
-                    } else {
-                        L.popup({
+                } else {
+                    L.popup({
                             maxWidth: 800
                         })
                         .setLatLng(latlng)
                         .setContent(Number(content.getElementsByTagName('value')[this.wmsParams.month - 1].childNodes[0].nodeValue).toFixed(2) + " mm")
                         .openOn(map);
-                    }
+                }
 
-                    break;
+                break;
             }
 
         }
@@ -360,6 +363,6 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
 });
 
-L.tileLayer.betterWms = function(url, options) {
+L.tileLayer.betterWms = function (url, options) {
     return new L.TileLayer.BetterWMS(url, options);
 };

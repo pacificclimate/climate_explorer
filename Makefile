@@ -66,7 +66,6 @@ usa.json: build/states.json
 		--out-object=nation \
 		-- $<
 
-
 # newUs.json: build/us.json
 # 	node_modules/.bin/topojson \
 # 		-o $@ \

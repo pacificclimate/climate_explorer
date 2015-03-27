@@ -2,13 +2,13 @@ var width = 760,
     height = 500;
 
 var crs = new L.Proj.CRS('EPSG:3005',
-        '+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs', {
-            resolutions: [
-                4592, 3000, 1648, 1024, 512, 256, 128,
-                64, 32, 16, 8, 4, 2, 1, 0.5
-            ],
-            origin: [0, 0]
-        }),
+            '+proj=aea +lat_1=50 +lat_2=58.5 +lat_0=45 +lon_0=-126 +x_0=1000000 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs', {
+        resolutions: [
+            4592, 3000, 1648, 1024, 512, 256, 128,
+            64, 32, 16, 8, 4, 2, 1, 0.5
+        ],
+        origin: [0, 0]
+    }),
     southWest = L.latLng(46.851760, -142.734375),
     northEast = L.latLng(60.364901, -114.917969),
     bounds = L.latLngBounds(southWest, northEast);
@@ -22,12 +22,207 @@ var map = new L.Map('map', {
 
 map.setView([54, -122.9364], 1);
 
-// var playButton = d3.select("#g-play-button");
 
-// var day;
+function ready(error, canada, usa, ocean) {
+    "use strict";
+    if (error) { 
+        return console.error(error);
+    }
 
-// playButton
-//         .on("click", annual);
+
+    function brushed() {
+
+        var value = brush.extent()[0];
+
+        if (d3.event.sourceEvent) {
+
+            value = Math.round(x.invert(d3.mouse(this)[0]));
+            brush.extent([value, value]);
+        }
+        handle.attr("cx", x(value));
+        var brushDate = brushToMonth(value);
+        current.month = brushDate;
+        map.removeLayer(wmsL); // remove layer to prevent them from piling up.
+
+
+        drawMap(brushDate, climate_var);
+
+    }
+
+    var x = d3.scale.linear()
+        .domain([1, 13])
+        .range([0, sliderWidth])
+        .clamp(true);
+
+    var brush = d3.svg.brush()
+        .x(x)
+        .extent([current.month, current.month])
+        .on("brush", brushed);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("button")
+        .ticks(13)
+        .tickFormat(function (d) {
+            return xTicks[d];
+        })
+        .tickSize(10, 0)
+        .tickPadding(0);
+
+
+    var svg = d3.select(map.getPanes().overlayPane).append("svg"),
+        g = svg.append("g").attr("class", "leaflet-zoom-hide");
+
+    var pacific = topojson.feature(ocean, ocean.objects.ocean);
+
+    // first variable is used to center and scale map the viewport
+    var bTopo = topojson.feature(canada, canada.objects.canada),
+        topo = bTopo.features;
+    var usTopo = topojson.feature(usa, usa.objects.counties);
+    // var usaTopo = topojson.feature(usa, usa.objects.states);
+
+    svg.selectAll("path")
+        .data(topo)
+        .enter()
+        .append("path");
+
+    var transform = d3.geo.transform({
+            point: projectPoint
+        }),
+        path = d3.geo.path().projection(transform);
+
+    var feature = g.selectAll("path")
+        .data(bTopo.features)
+        .enter()
+        .append("path")
+        .attr("class", "canada")
+        .attr("id", "land");
+
+    function reset() {
+
+        var bounds = path.bounds(usTopo), //Use US for the projection bounds
+            topLeft = bounds[0],
+            bottomRight = bounds[1];
+
+        svg.attr("width", bottomRight[0] - topLeft[0])
+            .attr("height", bottomRight[1] - topLeft[1])
+            .style("left", topLeft[0] + "px")
+            .style("top", topLeft[1] + "px");
+
+        g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+
+        feature.attr("d", path)
+            .style("fill", function (d) {
+                // console.log(d)
+                if (d.properties.province === "British Columbia") {
+                    return "none";
+                }
+                return "#ddd";
+            });
+
+        // featureUSA.attr("d", path); //state borders
+
+        featureUS.attr("d", path) //make these counties (Alaska panhandle and San Juan Islands) visible. 
+            .style("fill", function (d) {
+                if (d.id === "02105" || d.id === "02100" || d.id === "02230" || d.id === "02110" || d.id === "02220" || d.id === "02195" || d.id === "02275" || d.id === "02198" || d.id === "02130" || d.id === "53055") 
+                {
+                return "none";
+                }
+                return "#ddd";
+            });
+
+        ocean.attr("d", path)
+            .style("fill", "#a6cef5");
+
+    }
+
+    map.on("viewreset", reset);
+
+    var featureUS = g.selectAll("path1")
+        .data(usTopo.features)
+        .enter().append("path");
+
+    // var featureUSA = g.selectAll("path1")
+    //     .data(usaTopo.features)
+    //     .enter().append("path")
+    //     .attr("class", "us");
+
+    ocean = g.selectAll("path2") // only using to mask tiles that spill over boarder. Could clip tiles instead...
+        .data(pacific.features)
+        .enter().append("path")
+        .attr("class", "ocean");
+
+    // console.log(current.month)
+    climate_var = "tmax";
+
+
+
+    drawMap(current.month, climate_var); //initialize with Jan and tmax
+
+    sliderContainer.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + sliderHeight / 2 + ")")
+        .call(d3.svg.axis()
+            .scale(x)
+            .orient("button")
+            .ticks(12)
+            .tickFormat(function (d) {
+                return xTicks[d];
+            })
+            .tickSize(0)
+            .tickPadding(12))
+        .select(".domain")
+        .select(function () {
+            return this.parentNode.appendChild(this.cloneNode(true));
+        })
+        .attr("class", "halo");
+
+
+    var tick = sliderContainer.selectAll(".tick")
+      .each(function () { 
+        this.parentNode.appendChild(this);});
+
+   
+    tick.filter(function (d) { 
+        return d in xTicks; })
+        .attr("class", function (d) { 
+        return "tick tick-special tick-" + xTicks[d].toLowerCase();});
+
+    sliderContainer.call(xAxis);
+
+    var slider = sliderContainer.append("g")
+        .attr("class", "g-slider")
+        .call(brush);
+
+    slider.selectAll(".extent, .resize").remove();
+
+    slider.select(".background")
+        .attr("height", sliderHeight);
+
+    var handle = slider.append("circle")
+        .attr("class", "handle")
+        .attr("transform", "translate(0," + sliderHeight / 2 + ")")
+        .attr("r", 9);
+
+
+    reset();
+
+
+    // trace selection
+    $(document).ready(function () {
+        $('.climate_var').on('change', function () {
+            climate_var = $('.climate_var').val();
+
+            map.removeLayer(wmsL); // remove layer to prevent them from piling up.
+            drawMap(current.month, climate_var, day);
+
+        });
+
+    });
+
+    makeChart();
+
+}
 
 queue()
     .defer(d3.json, "canada.json")
@@ -77,7 +272,7 @@ var xTicks = {
     "10": "",
     "11": "Nov",
     "12": "",
-    "13":"Ann"
+    "13": "Ann"
 };
 
 
@@ -96,14 +291,13 @@ function drawMap(date, climate_var, day) {
     "use strict";
     // console.log(date)
     if (day === undefined) {
-          day = '15';
+        day = '15';
     } 
     if (date === 13) { //annual values
-        date = 6,
-        day = 30
-        } 
+        date = 6;
+        day = 30;
+        }; 
 
-    console.log('adding this allows map to load in safari...')
     var y = d3.scale.log()
         .range([150, 0]);
 
@@ -129,7 +323,8 @@ function drawMap(date, climate_var, day) {
                 }
                 ymax = data.max / 4;
 
-                if (day === 30) ymax = data.max;
+                if (day === 30) {
+                    ymax = data.max;}
                 
                 ymin = data.min;
                 y.domain([ymin, ymax]);
@@ -160,7 +355,7 @@ function drawMap(date, climate_var, day) {
                     minZoom: 0,
                     transparent: 'true',
                     month: date,
-                    time: '1985-' + date + '-'+day,
+                    time: '1985-' + date + '-' + day,
                     styles: 'boxfill/occam_inv',
                     COLORSCALERANGE: ymin + "," + ymax,
                     logscale: true,
@@ -232,7 +427,7 @@ function drawMap(date, climate_var, day) {
                     minZoom: 0,
                     transparent: 'true',
                     month: date,
-                    time: '1985-' + date + '-'+day,
+                    time: '1985-' + date + '-' + day,
                     styles: 'boxfill/rainbow',
                     COLORSCALERANGE: ymin + "," + ymax,
                     logscale: false,
@@ -256,203 +451,8 @@ function drawMap(date, climate_var, day) {
 //     drawMap(current.month, climate_var,day);
 // }
 
-function ready(error, canada, usa, ocean) {
-    "use strict";
 
-    // if (error) return console.error(error);
-
-    function brushed() {
-
-        var value = brush.extent()[0];
-
-        if (d3.event.sourceEvent) {
-
-            value = Math.round(x.invert(d3.mouse(this)[0]));
-            brush.extent([value, value]);
-        }
-        handle.attr("cx", x(value));
-        var brushDate = brushToMonth(value);
-        current.month = brushDate;
-        map.removeLayer(wmsL); // remove layer to prevent them from piling up.
-
-
-        drawMap(brushDate, climate_var);
-
-    }
-
-    var x = d3.scale.linear()
-        .domain([1, 13])
-        .range([0, sliderWidth])
-        .clamp(true);
-
-    var brush = d3.svg.brush()
-        .x(x)
-        .extent([current.month, current.month])
-        .on("brush", brushed);
-
-    var xAxis = d3.svg.axis()
-        .scale(x)
-        .orient("button")
-        .ticks(13)
-        .tickFormat(function (d) {
-            return xTicks[d];
-        })
-        .tickSize(10, 0)
-        .tickPadding(0);
-
-
-    var svg = d3.select(map.getPanes().overlayPane).append("svg"),
-        g = svg.append("g").attr("class", "leaflet-zoom-hide");
-
-    var pacific = topojson.feature(ocean, ocean.objects.ocean);
-
-    // first variable is used to center and scale map the viewport
-    var bTopo = topojson.feature(canada, canada.objects.canada),
-        topo = bTopo.features;
-    var usTopo = topojson.feature(usa, usa.objects.counties);
-    // var usaTopo = topojson.feature(usa, usa.objects.states);
-
-    svg.selectAll("path")
-        .data(topo)
-        .enter()
-        .append("path");
-
-    var transform = d3.geo.transform({
-            point: projectPoint
-        }),
-        path = d3.geo.path().projection(transform);
-
-    var feature = g.selectAll("path")
-        .data(bTopo.features)
-        .enter()
-        .append("path")
-        .attr("class", "canada")
-        .attr("id", "land");
-
-    map.on("viewreset", reset);
-
-    var featureUS = g.selectAll("path1")
-        .data(usTopo.features)
-        .enter().append("path");
-
-    // var featureUSA = g.selectAll("path1")
-    //     .data(usaTopo.features)
-    //     .enter().append("path")
-    //     .attr("class", "us");
-
-    ocean = g.selectAll("path2") // only using to mask tiles that spill over boarder. Could clip tiles instead...
-        .data(pacific.features)
-        .enter().append("path")
-        .attr("class", "ocean");
-
-    // console.log(current.month)
-    climate_var = "tmax";
-
-
-
-    drawMap(current.month, climate_var); //initialize with Jan and tmax
-
-    sliderContainer.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + sliderHeight / 2 + ")")
-        .call(d3.svg.axis()
-            .scale(x)
-            .orient("button")
-            .ticks(12)
-            .tickFormat(function (d) {
-                return xTicks[d];
-            })
-            .tickSize(0)
-            .tickPadding(12))
-        .select(".domain")
-        .select(function () {
-            return this.parentNode.appendChild(this.cloneNode(true));
-        })
-        .attr("class", "halo");
-
-
-    var tick = sliderContainer.selectAll(".tick")
-      .each(function() { this.parentNode.appendChild(this); });
-
-   
-    tick.filter(function(d) { return d in xTicks; })
-      .attr("class", function(d) { return "tick tick-special tick-" + xTicks[d].toLowerCase(); });
-
-    sliderContainer.call(xAxis);
-
-    var slider = sliderContainer.append("g")
-        .attr("class", "g-slider")
-        .call(brush);
-
-    slider.selectAll(".extent, .resize").remove();
-
-    slider.select(".background")
-        .attr("height", sliderHeight);
-
-    var handle = slider.append("circle")
-        .attr("class", "handle")
-        .attr("transform", "translate(0," + sliderHeight / 2 + ")")
-        .attr("r", 9);
-
-
-    reset();
-
-    function reset() {
-
-        var bounds = path.bounds(usTopo), //Use US for the projection bounds
-            topLeft = bounds[0],
-            bottomRight = bounds[1];
-
-        svg.attr("width", bottomRight[0] - topLeft[0])
-            .attr("height", bottomRight[1] - topLeft[1])
-            .style("left", topLeft[0] + "px")
-            .style("top", topLeft[1] + "px");
-
-        g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
-
-        feature.attr("d", path)
-            .style("fill", function (d) {
-                // console.log(d)
-                if (d.properties.province === "British Columbia") {
-                    return "none";
-                }
-                return "#ddd";
-            });
-
-        // featureUSA.attr("d", path); //state borders
-
-        featureUS.attr("d", path) //make these counties (Alaska panhandle and San Juan Islands) visible. 
-            .style("fill", function (d) {
-                if (d.id === "02105" || d.id === "02100" || d.id === "02230" || d.id === "02110" || d.id === "02220" || d.id === "02195" || d.id === "02275" || d.id === "02198" || d.id === "02130" || d.id === "53055") {
-                    return "none";
-                }
-                return "#ddd";
-            });
-
-        ocean.attr("d", path)
-            .style("fill", "#a6cef5");
-
-    }
-
-
-    // trace selection
-    $(document).ready(function () {
-        $('.climate_var').on('change', function () {
-            climate_var = $('.climate_var').val();
-
-            map.removeLayer(wmsL); // remove layer to prevent them from piling up.
-            console.log(day)
-            drawMap(current.month, climate_var, day);
-
-        });
-
-    });
-
-
-    makeChart();
-
-}
-
+//set up vars for chart. Need to be accessed in L.TileLayer.BetterWMS
 var counter = 0,
     svg,
     AvgLine,
@@ -511,10 +511,10 @@ function makeChart() {
         });
 
     var meanLine = d3.svg.line()
-        .x(function(d) {
+        .x(function (d) {
             return x(d.x);
         })
-        .y(function(d) {
+        .y(function (d) {
             return y(d.y);
         });
 
