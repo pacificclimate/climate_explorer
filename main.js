@@ -527,7 +527,7 @@ function makeChart() {
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-    y.domain([-25, 30]);
+    y.domain([0, 0]);
 
     svg.append("g") //x axis group
         .attr("class", "x axisC")

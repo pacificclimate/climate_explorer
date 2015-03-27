@@ -73,6 +73,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
     showGetFeatureInfo: function (err, latlng, content) {
 
+
         //only try and show values for PRSIM locations (avoid NaNs)
         if (content.getElementsByTagName('value')[0].childNodes[0].nodeValue > -50 && content.getElementsByTagName('value')[0].childNodes[0].nodeValue < 30000) {
             // make chart text visible but only add once
@@ -84,7 +85,9 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
 
                 counter++;
 
+
             }
+
 
             chartData = [];
             // debugger;
@@ -120,6 +123,7 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
             }));
 
             x.nice(d3.time.month); //needed to show first month on x-axis
+
 
             switch (climate_var) {
             case 'pr':
