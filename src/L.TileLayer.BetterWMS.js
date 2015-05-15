@@ -190,7 +190,6 @@ L.TileLayer.BetterWMS = L.TileLayer.WMS.extend({
                         return x(d.x);
                     })
                     .y(function (d) {
-                        console.log(dataSum / 12)
                         return y(dataSum / 12);
                     });
 
