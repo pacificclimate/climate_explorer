@@ -1,21 +1,16 @@
-wget --output-document=myfile.txt --header "Cookie: beaker.session.id=160e7a46fa0145f7a66ccf23c5c7a131" http://tools.pcic.uvic.ca/dataportal/bc_prism/data/tmax_monClim_PRISM_historical_run1_197101-200012.nc
+# UI Demo for BC Climate Explorer
 
-As csv
-wget --output-document=- --header "Cookie: beaker.session.id=160e7a46fa0145f7a66ccf23c5c7a131" http://tools.pcic.uvic.ca/dataportal/bc_prism/data/tmax_monClim_PRISM_historical_run1_197101-200012.nc.csv
+## Objectives
 
-so to get the yearly values (13th timestep)
-wget --output-document=- --header "Cookie: beaker.session.id=160e7a46fa0145f7a66ccf23c5c7a131" http://tools.pcic.uvic.ca/dataportal/bc_prism/data/tmax_monClim_PRISM_historical_run1_197101-200012.nc.csv?tmax[13][0:16800][0:32410]  2> /dev/null
+* The code in this repository demonstrates the feasibility of an interactive data visualization and analysis tool through the use of two UI controls
 
-# Get all the tmax data
-# get the key after you've logged in to main site on Chrome
-wget --output-document=pr.nc --header "Cookie: beaker.session.id=362b4e247c2d49c48a6ea237e72331ad" http://tools.pcic.uvic.ca/dataportal/bc_prism/data/pr_monClim_PRISM_historical_run1_197101-200012.nc?pr[0:13][0:16800][0:32410]  2> /dev/null
+  * a time slider which controls the climate layer shown on a web map
+  * a timeseries plot which displays the climate through time at a particular location
 
+* This repository demonstrates these controls by using a map page of PCIC's PRISM climatology data.
+* These UI controls allow users to explore and analyze climatological trends in BC for the 1971-2000 normal period
 
-#projection needs to be $EPSG:4269 - NAD83 
-# need to transfer data to linux machine for this part
+## Intended Use
 
-#convert to Geotiff and select band (band represents month number)
-gdal_translate -of GTiff NETCDF:"/Users/mathewbrown/projects/PCIC/pc.nc":pc -b 1 /Users/mathewbrown/projects/PCIC/build/jan_pr.tif
-
-
-
+* The code in this repository is *not* an application in and of itself
+* It is intended to explore the use of interactive plotting, in order to start a conversation about custom decision support solutions
