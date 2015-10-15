@@ -1,4 +1,4 @@
-# UI Demo for BC Climate Explorer
+# [UI Demo for BC Climate Explorer](https://pacificclimate.github.io/climate_explorer-d3-clickhandler)
 
 ## Objectives
 
